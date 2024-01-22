@@ -1,1 +1,1 @@
-from tictactoe.envs.tictactoe import TicTacToeEnv
+from qwirkle.envs.qwirkle import QwirkleEnv
