@@ -1,9 +1,9 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='tictactoe',
+    name='qwirkle',
     version='0.1.0',
-    description='TicTacToe Gym Environment',
+    description='Qwirkle Gym Environment',
     packages=find_packages(),
     install_requires=[
         'gym>=0.9.4,<=0.15.7',

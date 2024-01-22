@@ -20,6 +20,9 @@ def get_environment(env_name):
         elif env_name in ('frouge'):
             from frouge.envs.frouge import FlammeRougeEnv
             return FlammeRougeEnv
+        elif env_name in ('qwirkle'):  # Add this line
+            from qwirkle.envs.qwirkle import QwirkleEnv  # And this line
+            return QwirkleEnv  # And this line
         else:
             raise Exception(f'No environment found for {env_name}')
     except SyntaxError as e:
