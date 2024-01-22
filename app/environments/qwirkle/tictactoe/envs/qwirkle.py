@@ -22,12 +22,12 @@ class Token():
 
     
 
-class TicTacToeEnv(gym.Env):
+class QwirkleEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
     def __init__(self, verbose = False, manual = False):
-        super(TicTacToeEnv, self).__init__()
-        self.name = 'tictactoe'
+        super(QwirkleEnv, self).__init__()
+        self.name = 'qwirkle'
         self.manual = manual
         
         self.grid_length = 3
