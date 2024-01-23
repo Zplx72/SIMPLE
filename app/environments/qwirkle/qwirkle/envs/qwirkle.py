@@ -26,10 +26,13 @@ class QwirkleEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
     def __init__(self, verbose = False, manual = False):
+        # The first place to change
+        # Only two players
         super(QwirkleEnv, self).__init__()
         self.name = 'qwirkle'
         self.manual = manual
         
+        # No need for all the grid stuff bu maybe something similar
         self.grid_length = 3
         self.n_players = 2
         self.num_squares = self.grid_length * self.grid_length
@@ -42,6 +45,12 @@ class QwirkleEnv(gym.Env):
     @property
     def observation(self):
         if self.players[self.current_player_num].token.number == 1:
+            # This evaluates moves, so this encodes the entire game state, in qwirkle is different size of board.
+            # Try a maximum size and a constant sizee(finite number of size)
+            # Max size of board can be caluclated.  maybe a rectangle
+            # Very important function to change
+            # functionally should be the smae state if tranformation happens. rotation and transformation should not be a problem
+            # You want the state spce should be as small as possible
             position = np.array([x.number for x in self.board]).reshape(self.grid_shape)
         else:
             position = np.array([-x.number for x in self.board]).reshape(self.grid_shape)
@@ -53,6 +62,7 @@ class QwirkleEnv(gym.Env):
     @property
     def legal_actions(self):
         legal_actions = []
+        # Legal actions which is legal moves, you can check from qwirkle implementation, no need to actually copy just call it,
         for action_num in range(len(self.board)):
             if self.board[action_num].number==0: #empty square
                 legal_actions.append(1)
@@ -62,10 +72,12 @@ class QwirkleEnv(gym.Env):
 
 
 
-
+    # check where this is coming from. 
     def square_is_player(self, square, player):
+        
         return self.board[square].number == self.players[player].token.number
 
+    # again qwirkle implementation would havve this
     def check_game_over(self):
 
         board = self.board
@@ -92,10 +104,12 @@ class QwirkleEnv(gym.Env):
         return 0, False
 
     @property
+    # Nothing need to be changed, probably
     def current_player(self):
         return self.players[self.current_player_num]
 
-
+    # This is interesting part for reward function. You may need functions from qwirkle implementation. No set answer how the reward funtion would work
+    # Easy mode assume the reward funtion doesknow everyone's state eventhough imperfect information.
     def step(self, action):
         
         reward = [0,0]
@@ -121,6 +135,7 @@ class QwirkleEnv(gym.Env):
 
         return self.observation, reward, done, {}
 
+    # Dependent on how you define the board and how to reset this.
     def reset(self):
         self.board = [Token('.', 0)] * self.num_squares
         self.players = [Player('1', Token('X', 1)), Player('2', Token('O', -1))]
@@ -130,7 +145,7 @@ class QwirkleEnv(gym.Env):
         logger.debug(f'\n\n---- NEW GAME ----')
         return self.observation
 
-
+    # Map how it outputs the game on cml
     def render(self, mode='human', close=False, verbose = True):
         logger.debug('')
         if close:
