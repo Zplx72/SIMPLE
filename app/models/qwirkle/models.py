@@ -8,6 +8,7 @@ from tensorflow.keras.layers import BatchNormalization, Activation, Flatten, Con
 from stable_baselines.common.policies import ActorCriticPolicy
 from stable_baselines.common.distributions import CategoricalProbabilityDistributionType, CategoricalProbabilityDistribution
 
+##### The model.py contains everything you  need write in the ther place. 
 
 class CustomPolicy(ActorCriticPolicy):
     def __init__(self, sess, ob_space, ac_space, n_env, n_steps, n_batch, reuse=False, **kwargs):

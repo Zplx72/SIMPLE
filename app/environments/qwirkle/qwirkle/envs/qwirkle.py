@@ -21,7 +21,10 @@ class Token():
         
 
     
-
+##### This is the first step. The most important is to think about how to encode the state space and action space. And then it's the reward function.
+##### Check how the tictactooe is conceptually encoded and try to conceptually encode qwrikle. and then try to implement it.  Chekc how they all games do ti and see how you can 
+##### no matter how you  are encoding the board it needst be passed as a list at the end.
+##### Islegal move is a good place to start, but how you can access the space.
 class QwirkleEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
@@ -37,6 +40,8 @@ class QwirkleEnv(gym.Env):
         self.n_players = 2
         self.num_squares = self.grid_length * self.grid_length
         self.grid_shape = (self.grid_length, self.grid_length)
+
+        #Most importatn one is the action space and observation space
         self.action_space = gym.spaces.Discrete(self.num_squares)
         self.observation_space = gym.spaces.Box(-1, 1, self.grid_shape+(2,))
         self.verbose = verbose
@@ -165,7 +170,8 @@ class QwirkleEnv(gym.Env):
         if not self.done:
             logger.debug(f'\nLegal actions: {[i for i,o in enumerate(self.legal_actions) if o != 0]}')
 
-
+    # This is to make a move. Given a certain state of the board what are you doing next.
+    # Also log to report the what is happening
     def rules_move(self):
         if self.current_player.token.number == 1:
             b = [x.number for x in self.board]
@@ -222,7 +228,7 @@ class QwirkleEnv(gym.Env):
         action_probs[action] = 0.92
         return action_probs   
 
-
+# helper funciton for isgame over. Check if it is being used from the outside. Just check that if it is NOT called model.py.
 def checkWin(b, m):
     return ((b[0] == m and b[1] == m and b[2] == m) or  # H top
             (b[3] == m and b[4] == m and b[5] == m) or  # H mid
@@ -237,6 +243,7 @@ def checkWin(b, m):
 def checkDraw(b):
     return 0 not in b
 
+# again a helper funciton. probably something similar but the board is different
 def getBoardCopy(b):
     # Make a duplicate of the board. When testing moves we don't want to 
     # change the actual board
@@ -245,6 +252,7 @@ def getBoardCopy(b):
         dupeBoard.append(j)
     return dupeBoard
 
+# test functions, what does it test. need to write your own test.
 def testWinMove(b, mark, i):
     # b = the board
     # mark = 0 or X
