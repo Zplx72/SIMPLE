@@ -35,14 +35,26 @@ class QwirkleEnv(gym.Env):
         self.name = 'qwirkle'
         self.manual = manual
         
-        # No need for all the grid stuff bu maybe something similar
-        self.grid_length = 3
+        # No need for all the grid stuff perhaps something similar.
+        self.grid_length = 108
         self.n_players = 2
         self.num_squares = self.grid_length * self.grid_length
         self.grid_shape = (self.grid_length, self.grid_length)
 
+        self.n_tiles = 6
+
         #Most importatn one is the action space and observation space
+        # The action space is the number of squares on the board, as you can place a token on any square
         self.action_space = gym.spaces.Discrete(self.num_squares)
+
+        self.action_space = gym.spaces.Tuple((
+        # The set of all possible actions an agent could take. In this case is the index of the tiles of the player's hand.
+        gym.spaces.Discrete(self.n_tiles),  # The player's hand has 6 tiles
+        gym.spaces.MultiDiscrete([self.grid_length, self.grid_length])  # The board is grid_length x grid_length
+        ))
+
+        # For a game like Tic Tac Toe, the observation space might be a 3x3 grid
+        # where each cell can be in one of three states (empty, occupied by player 1, or occupied by player 2)
         self.observation_space = gym.spaces.Box(-1, 1, self.grid_shape+(2,))
         self.verbose = verbose
         
