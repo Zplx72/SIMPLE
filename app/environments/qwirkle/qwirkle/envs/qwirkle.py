@@ -55,7 +55,8 @@ class QwirkleEnv(gym.Env):
 
         # For a game like Tic Tac Toe, the observation space might be a 3x3 grid
         # where each cell can be in one of three states (empty, occupied by player 1, or occupied by player 2)
-        self.observation_space = gym.spaces.Box(-1, 1, self.grid_shape+(2,))
+        # self.observation_space = gym.spaces.Box(-1, 1, self.grid_shape+(2,))
+        self.observation_space = gym.spaces.Box(low=0, high=1, shape=(108, 108, 3), dtype=np.int)
         self.verbose = verbose
         
 
