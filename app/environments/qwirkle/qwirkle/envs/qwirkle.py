@@ -35,6 +35,24 @@ class QwirkleEnv(gym.Env):
         self.name = 'qwirkle'
         self.manual = manual
         
+        # color_to_dimesion 
+        self.color_to_dimension = {
+            'red': 0,
+            'orange': 1,
+            'yellow': 2,
+            'green': 3,
+            'blue': 4,
+            'purple': 5
+        }
+        self.shape_to_dimension = {
+            'circle': 6,
+            'square': 7,
+            'diamond': 8,
+            'clover': 9,
+            'star': 10,
+            'cross': 11
+        }
+        
         # No need for all the grid stuff perhaps something similar.
         self.grid_length = 108
         self.n_players = 2
@@ -56,9 +74,19 @@ class QwirkleEnv(gym.Env):
         # For a game like Tic Tac Toe, the observation space might be a 3x3 grid
         # where each cell can be in one of three states (empty, occupied by player 1, or occupied by player 2)
         # self.observation_space = gym.spaces.Box(-1, 1, self.grid_shape+(2,))
-        self.observation_space = gym.spaces.Box(low=0, high=1, shape=(108, 108, 3), dtype=np.int)
+        # defines the structure of the observations that the environment provides to the agent.
+        self.observation_space = gym.spaces.Box(low=0, high=1, shape=(108, 108, 12), dtype=np.int)        
         self.verbose = verbose
-        
+            
+    def place_tile(self, row, col, color, shape):
+        # Reset the cell's state
+        self.board[row, col] = np.zeros(12, dtype=np.int)
+
+        # This does not seem right does it?
+        # Set the dimensions corresponding to the tile's color and shape
+        self.board[row, col, self.color_to_dimension[color]] = 1
+        self.board[row, col, self.shape_to_dimension[shape]] = 1    
+
 
     @property
     def observation(self):
