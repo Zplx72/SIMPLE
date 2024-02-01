@@ -20,9 +20,9 @@ class Token():
         
 
     
-##### This is the first step. The most important is to think about how to encode the state space and action space. And then it's the reward function.
+##### This is the first step. The most important is to think about how to encode the state space and action space. And then it's the reward function. DONE
 ##### Check how the tictactooe is conceptually encoded and try to conceptually encode qwrikle. and then try to implement it.  Chekc how they all games do ti and see how you can 
-##### no matter how you  are encoding the board it needst be passed as a list at the end.
+##### no matter how you  are encoding the board it needst be passed as a list at the end. DONE
 ##### Islegal move is a good place to start, but how you can access the space.
 class QwirkleEnv(gym.Env):
     metadata = {'render.modes': ['human']}
