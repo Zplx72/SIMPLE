@@ -45,11 +45,12 @@ class QwirkleEnv(gym.Env):
         self.bag_of_tiles = [(color, shape) for color in self.colours for shape in self.shapes for i in range(3)]
 
         # Initialize the players' hands
-        self.player_hands = [self.draw_tiles(6) for _ in range(self.n_players)]
+        self.player_hands = [self.draw_tiles(6) for i in range(self.n_players)]
 
         # Initialize the board
+        self.board = np.zeros((self.grid_length, self.grid_length, 12), dtype=np.int)
         # No need for all the grid stuff perhaps something similar.
-        self.grid_length = 108
+        self.grid_length = 91
         self.n_players = 2
         self.num_squares = self.grid_length * self.grid_length
         self.grid_shape = (self.grid_length, self.grid_length)
@@ -72,9 +73,13 @@ class QwirkleEnv(gym.Env):
         # defines the structure of the observations that the environment provides to the agent.
         # NEW: you need to observe the hand as well
         # NEW: put what the algorithm does as a flowchart. 
-        self.observation_space = gym.spaces.Box(low=0, high=1, shape=(108, 108, 12), dtype=np.int)        
+        self.observation_space = gym.spaces.Tuple((
+            gym.spaces.Box(low=0, high=1, shape=(self.n_tiles, 12), dtype=np.int),  # Player's hand
+            gym.spaces.Box(low=0, high=1, shape=(self.grid_length, self.grid_length, 12), dtype=np.int)  # Board
+        ))     
         self.verbose = verbose
-        
+
+    # NEW: I only need tot store the action and the state, I need to call over the other game.    
     def draw_tiles(self, num_tiles):
         # Check if there are enough tiles left in the bag
         if len(self.bag_of_tiles) < num_tiles:
@@ -88,15 +93,14 @@ class QwirkleEnv(gym.Env):
             self.bag_of_tiles.remove(tile)
 
         return tiles          
-      
+        
     def place_tile(self, row, col, color, shape):
         # Reset the cell's state
         self.board[row, col] = np.zeros(12, dtype=np.int)
 
-        # This does not seem right does it?
         # Set the dimensions corresponding to the tile's color and shape
         self.board[row, col, self.color_to_dimension[color]] = 1
-        self.board[row, col, self.shape_to_dimension[shape]] = 1    
+        self.board[row, col, self.shape_to_dimension[shape]] = 1  
 
 
     @property
