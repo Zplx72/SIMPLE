@@ -79,20 +79,20 @@ class QwirkleEnv(gym.Env):
         ))     
         self.verbose = verbose
 
-    # NEW: I only need tot store the action and the state, I need to call over the other game.    
+    # NEW: I only need tot store the action and the state, I need to call over the other game.  
+    #If there are tiles left in the bag, it randomly selects one, removes it from the bag, and adds it to 
+    #the list of drawn tiles. If there are no tiles left in the bag, it breaks out of the loop and returns the tiles that were drawn. 
+    #This way, the game can continue even if there are no tiles left to draw.          
     def draw_tiles(self, num_tiles):
-        # Check if there are enough tiles left in the bag
-        if len(self.bag_of_tiles) < num_tiles:
-            raise Exception("Not enough tiles left in the bag")
-
-        # Draw num_tiles tiles from the bag
-        tiles = random.sample(self.bag_of_tiles, num_tiles)
-
-        # Remove the drawn tiles from the bag
-        for tile in tiles:
-            self.bag_of_tiles.remove(tile)
-
-        return tiles          
+        tiles = []
+        for i in range(num_tiles):
+            if self.bag_of_tiles:
+                tile = random.choice(self.bag_of_tiles)
+                self.bag_of_tiles.remove(tile)
+                tiles.append(tile)
+            else:
+                break
+        return tiles   
         
     def place_tile(self, row, col, color, shape):
         # Reset the cell's state
