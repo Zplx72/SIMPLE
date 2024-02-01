@@ -4,7 +4,7 @@ import gym
 import numpy as np
 import random
 
-# from stable_baselines import logger
+from stable_baselines import logger
 
 
 class Player():
@@ -101,33 +101,56 @@ class QwirkleEnv(gym.Env):
         self.board[row, col, self.shape_to_dimension[shape]] = 1  
 
 
+    # @property
+    # def observation(self):
+    #     if self.players[self.current_player_num].token.number == 1:
+    #         # This evaluates moves, so this encodes the entire game state, in qwirkle is different size of board.
+    #         # Try a maximum size and a constant sizee(finite number of size)
+    #         # Max size of board can be caluclated.  maybe a rectangle 91 by 91. DONE
+    #         # Very important function to change
+    #         # functionally should be the smae state if tranformation happens. rotation and transformation should not be a problem VERY IMPORTANT.
+    #         # You want the state spce should be as small as possible FOR LATER
+    #         position = np.array([x.number for x in self.board]).reshape(self.grid_shape)
+    #     else:
+    #         position = np.array([-x.number for x in self.board]).reshape(self.grid_shape)
+
+    #     la_grid = np.array(self.legal_actions).reshape(self.grid_shape)
+    #     out = np.stack([position,la_grid], axis = -1)
+    #     return out
+
+    # This is different that observation in init. this runs every round but init runs only once.
     @property
     def observation(self):
-        if self.players[self.current_player_num].token.number == 1:
-            # This evaluates moves, so this encodes the entire game state, in qwirkle is different size of board.
-            # Try a maximum size and a constant sizee(finite number of size)
-            # Max size of board can be caluclated.  maybe a rectangle
-            # Very important function to change
-            # functionally should be the smae state if tranformation happens. rotation and transformation should not be a problem
-            # You want the state spce should be as small as possible
-            position = np.array([x.number for x in self.board]).reshape(self.grid_shape)
-        else:
-            position = np.array([-x.number for x in self.board]).reshape(self.grid_shape)
+        # Get the state of the board
+        board_state = self.board
+        
+        # So you get the legal actions based on the board state
+        # Compute the legal actions, 
+        legal_actions = self.legal_actions
 
-        la_grid = np.array(self.legal_actions).reshape(self.grid_shape)
-        out = np.stack([position,la_grid], axis = -1)
+        # Stack the board state and the legal actions along the last dimension
+        out = np.stack([board_state, legal_actions], axis=-1)
+
         return out
 
+    # Legal actions here goes through every cell on the board and check
+    # if it is empty and if it is legal to place a tile there.
     @property
     def legal_actions(self):
-        legal_actions = []
-        # Legal actions which is legal moves, you can check from qwirkle implementation, no need to actually copy just call it,
-        for action_num in range(len(self.board)):
-            if self.board[action_num].number==0: #empty square
-                legal_actions.append(1)
-            else:
-                legal_actions.append(0)
-        return np.array(legal_actions)
+        legal_actions = np.zeros((self.board.shape[0], self.board.shape[1]))
+
+        # Iterate over the cells on the board
+        for i in range(self.board.shape[0]):
+            for j in range(self.board.shape[1]):
+                # Check if the cell is empty
+                if np.all(self.board[i, j] == np.eye(12)[0]):  # Assuming the first tile is the "empty" tile
+                    # Check if placing a tile in this cell would be a legal action
+                    # is_legal_action is a function that you need to write, 
+                    # it should return True if the action is legal and False otherwise
+                    if self.is_legal_action(i, j):
+                        legal_actions[i, j] = 1
+
+        return legal_actions
 
 
 
