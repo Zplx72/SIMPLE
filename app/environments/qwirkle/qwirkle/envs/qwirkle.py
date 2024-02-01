@@ -39,23 +39,23 @@ class QwirkleEnv(gym.Env):
         # color_to_dimesion 
         self.colours = ['red', 'orange', 'yellow', 'green', 'blue', 'purple']
         self.shapes = ['circle', 'square', 'diamond', 'clover', 'star', 'cross']
-
+        self.n_tiles = 6
+        self.n_players = 2
 
         # Initialize the bag of tiles going through each color
         self.bag_of_tiles = [(color, shape) for color in self.colours for shape in self.shapes for i in range(3)]
 
         # Initialize the players' hands
-        self.player_hands = [self.draw_tiles(6) for i in range(self.n_players)]
+        self.player_hands = [self.draw_tiles(self.n_tiles) for i in range(self.n_players)]
 
-        # Initialize the board
-        self.board = np.zeros((self.grid_length, self.grid_length, 12), dtype=np.int)
         # No need for all the grid stuff perhaps something similar.
         self.grid_length = 91
-        self.n_players = 2
         self.num_squares = self.grid_length * self.grid_length
         self.grid_shape = (self.grid_length, self.grid_length)
+    
+        # Initialize the board
+        self.board = np.zeros((self.grid_length, self.grid_length, 12), dtype=np.int)
 
-        self.n_tiles = 6
 
         #Most importatn one is the action space and observation space
         # The action space is the number of squares on the board, as you can place a token on any square
