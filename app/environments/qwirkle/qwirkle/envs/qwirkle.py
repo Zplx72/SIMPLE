@@ -4,9 +4,7 @@ import gym
 import numpy as np
 import random
 
-import config
-
-from stable_baselines import logger
+# from stable_baselines import logger
 
 
 class Player():
@@ -43,8 +41,8 @@ class QwirkleEnv(gym.Env):
         self.n_players = 2
 
         # Initialize the bag of tiles going through each color
-        self.bag_of_tiles = [(color, shape) for color in self.colours for shape in self.shapes for i in range(3)]
-
+        self.bag_of_tiles = [(colour, shape) for colour in self.colours for shape in self.shapes for i in range(3)]
+        print(len(self.bag_of_tiles))
         # Initialize the players' hands
         self.player_hands = [self.draw_tiles(self.n_tiles) for i in range(self.n_players)]
 
@@ -54,7 +52,7 @@ class QwirkleEnv(gym.Env):
         self.grid_shape = (self.grid_length, self.grid_length)
     
         # Initialize the board
-        self.board = np.zeros((self.grid_length, self.grid_length, 12), dtype=np.int)
+        self.board = np.zeros((self.grid_length, self.grid_length, 12), dtype=np.int32)
 
 
         #Most importatn one is the action space and observation space
@@ -74,8 +72,8 @@ class QwirkleEnv(gym.Env):
         # NEW: you need to observe the hand as well
         # NEW: put what the algorithm does as a flowchart. 
         self.observation_space = gym.spaces.Tuple((
-            gym.spaces.Box(low=0, high=1, shape=(self.n_tiles, 12), dtype=np.int),  # Player's hand
-            gym.spaces.Box(low=0, high=1, shape=(self.grid_length, self.grid_length, 12), dtype=np.int)  # Board
+            gym.spaces.Box(low=0, high=1, shape=(self.n_tiles, 12), dtype=np.int32),  # Player's hand
+            gym.spaces.Box(low=0, high=1, shape=(self.grid_length, self.grid_length, 12), dtype=np.int32)  # Board
         ))     
         self.verbose = verbose
 
@@ -96,7 +94,7 @@ class QwirkleEnv(gym.Env):
         
     def place_tile(self, row, col, color, shape):
         # Reset the cell's state
-        self.board[row, col] = np.zeros(12, dtype=np.int)
+        self.board[row, col] = np.zeros(12, dtype=np.int32)
 
         # Set the dimensions corresponding to the tile's color and shape
         self.board[row, col, self.color_to_dimension[color]] = 1
