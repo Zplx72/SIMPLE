@@ -2,6 +2,7 @@
 
 import gym
 import numpy as np
+import random
 
 import config
 
@@ -36,23 +37,17 @@ class QwirkleEnv(gym.Env):
         self.manual = manual
         
         # color_to_dimesion 
-        self.color_to_dimension = {
-            'red': 0,
-            'orange': 1,
-            'yellow': 2,
-            'green': 3,
-            'blue': 4,
-            'purple': 5
-        }
-        self.shape_to_dimension = {
-            'circle': 6,
-            'square': 7,
-            'diamond': 8,
-            'clover': 9,
-            'star': 10,
-            'cross': 11
-        }
-        
+        self.colours = ['red', 'orange', 'yellow', 'green', 'blue', 'purple']
+        self.shapes = ['circle', 'square', 'diamond', 'clover', 'star', 'cross']
+
+
+        # Initialize the bag of tiles going through each color
+        self.bag_of_tiles = [(color, shape) for color in self.colours for shape in self.shapes for i in range(3)]
+
+        # Initialize the players' hands
+        self.player_hands = [self.draw_tiles(6) for _ in range(self.n_players)]
+
+        # Initialize the board
         # No need for all the grid stuff perhaps something similar.
         self.grid_length = 108
         self.n_players = 2
@@ -63,7 +58,7 @@ class QwirkleEnv(gym.Env):
 
         #Most importatn one is the action space and observation space
         # The action space is the number of squares on the board, as you can place a token on any square
-        self.action_space = gym.spaces.Discrete(self.num_squares)
+        # self.action_space = gym.spaces.Discrete(self.num_squares)
 
         self.action_space = gym.spaces.Tuple((
         # The set of all possible actions an agent could take. In this case is the index of the tiles of the player's hand.
@@ -75,9 +70,25 @@ class QwirkleEnv(gym.Env):
         # where each cell can be in one of three states (empty, occupied by player 1, or occupied by player 2)
         # self.observation_space = gym.spaces.Box(-1, 1, self.grid_shape+(2,))
         # defines the structure of the observations that the environment provides to the agent.
+        # NEW: you need to observe the hand as well
+        # NEW: put what the algorithm does as a flowchart. 
         self.observation_space = gym.spaces.Box(low=0, high=1, shape=(108, 108, 12), dtype=np.int)        
         self.verbose = verbose
-            
+        
+    def draw_tiles(self, num_tiles):
+        # Check if there are enough tiles left in the bag
+        if len(self.bag_of_tiles) < num_tiles:
+            raise Exception("Not enough tiles left in the bag")
+
+        # Draw num_tiles tiles from the bag
+        tiles = random.sample(self.bag_of_tiles, num_tiles)
+
+        # Remove the drawn tiles from the bag
+        for tile in tiles:
+            self.bag_of_tiles.remove(tile)
+
+        return tiles          
+      
     def place_tile(self, row, col, color, shape):
         # Reset the cell's state
         self.board[row, col] = np.zeros(12, dtype=np.int)
