@@ -1,5 +1,8 @@
 # Adapted from https://mblogscode.com/2016/06/03/python-naughts-crossestic-tac-toe-coding-unbeatable-ai/
 
+# Metting 2: observation space, you encoded your own game board and your tiles, and they have (qwrikle game) to link it.
+# 
+
 import gym
 import numpy as np
 import random
@@ -77,6 +80,8 @@ class QwirkleEnv(gym.Env):
         ))     
         self.verbose = verbose
 
+    # Anything that part of the RL game is not part of the qwirkle implementation. Like reward, action, 
+
     # NEW: I only need tot store the action and the state, I need to call over the other game.  
     #If there are tiles left in the bag, it randomly selects one, removes it from the bag, and adds it to 
     #the list of drawn tiles. If there are no tiles left in the bag, it breaks out of the loop and returns the tiles that were drawn. 
@@ -151,7 +156,7 @@ class QwirkleEnv(gym.Env):
                         legal_actions[i, j] = 1
 
         return legal_actions
-
+    # Start what you need and try to figure out how to do it. 
 
 
     # check where this is coming from. 
@@ -192,6 +197,24 @@ class QwirkleEnv(gym.Env):
 
     # This is interesting part for reward function. You may need functions from qwirkle implementation. No set answer how the reward funtion would work
     # Easy mode assume the reward funtion doesknow everyone's state eventhough imperfect information.
+    # Reward funciton:
+    # 1. Immediate Reward for Valid Move, 2. Reward Based on Points Scored:
+    # 3. Bonus Reward for Qwirkle 4. Penalty for Invalid Move: 
+    # 5. End Game Reward/Penalty
+
+    # Inputs of the reward funciton: Current state, action and next state. 
+    # meeting : what doe sqwirkle do for illegal move
+    # how strong do you want to punish, (maybe end the game) but you need to check the what does it say for illegal.
+    # you need to check if you need to end the game or not.
+    # for tictactoe it is 1 0 -1 but then the reward for qwirkle is differetn points. 
+    ### They have taken the step, after they make a move you day if the move was good or bad.
+    # self does contain the board. 
+    def step(self, action):
+        #once it took an action what would you do with that just say if it is a good idea or not. 
+        # you don't need tunrs_taken. 
+        # consider normalising the reward. 
+        reward = [0,0]
+        
     def step(self, action):
         
         reward = [0,0]
