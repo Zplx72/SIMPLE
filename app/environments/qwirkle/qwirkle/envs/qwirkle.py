@@ -7,14 +7,18 @@ import gym
 import numpy as np
 import random
 
-from stable_baselines import logger
+#from stable_baselines import logger
+
+colours = ['red', 'orange', 'yellow', 'green', 'blue', 'purple']
+shapes = ['circle', 'square', 'diamond', 'clover', 'star', 'cross']
+bag_of_tiles = [(colour, shape) for colour in colours for shape in shapes for i in range(3)]
 
 
 class Player():
-    def __init__(self, id, token):
+    def __init__(self, id):
         self.id = id
-        self.token = token
-        
+        self.score = 0
+        self.tiles = []        
 
 class Token():
     def __init__(self, symbol, number):
@@ -64,8 +68,9 @@ class QwirkleEnv(gym.Env):
 
         self.action_space = gym.spaces.Tuple((
         # The set of all possible actions an agent could take. In this case is the index of the tiles of the player's hand.
-        gym.spaces.Discrete(self.n_tiles),  # The player's hand has 6 tiles
-        gym.spaces.MultiDiscrete([self.grid_length, self.grid_length])  # The board is grid_length x grid_length
+        #gym.spaces.Discrete(self.n_tiles),  # The player's hand has 6 tiles
+        #gym.spaces.MultiBinary(self.n_tiles)
+        gym.spaces.MultiBinary((self.grid_length, self.grid_length))  # The board is grid_length x grid_length
         ))
 
         # For a game like Tic Tac Toe, the observation space might be a 3x3 grid
@@ -214,7 +219,40 @@ class QwirkleEnv(gym.Env):
         # you don't need tunrs_taken. 
         # consider normalising the reward. 
         reward = [0,0]
+        col = action % self.grid_length
+        row = action // self.grid_length
+        tile = None
+
+
+        # maximum point can be counted as 432.
+        #board = self.board
+        # check illegal action
+        if (self.board[row][col].any(1)):
+            done = True
+            reward = [1, 1]
+            reward[self.current_player_num] = -1
+        else:
+            self.board[row][col] = tile
+            reward[self.current_player_num] = 1
+            self.player_hands[self.current_player_num].remove(tile)
+
+            # handle game over
+            
+            self.player_hands[self.current_player_num].append(self.draw_tiles(1))
+
+            
+
         
+        self.current_player_num = (self.current_player_num + 1) % 2
+        self.turns_taken += 1
+
+        
+
+
+
+        
+
+
     def step(self, action):
         
         reward = [0,0]
@@ -242,12 +280,23 @@ class QwirkleEnv(gym.Env):
 
     # Dependent on how you define the board and how to reset this.
     def reset(self):
-        self.board = [Token('.', 0)] * self.num_squares
-        self.players = [Player('1', Token('X', 1)), Player('2', Token('O', -1))]
-        self.current_player_num = 0
+        # self.board = [Token('.', 0)] * self.num_squares
+        # self.players = [Player('1', Token('X', 1)), Player('2', Token('O', -1))]
+
+        # Initialize the bag of tiles going through each color
+        self.bag_of_tiles = [(colour, shape) for colour in self.colours for shape in self.shapes for i in range(3)]
+        print(len(self.bag_of_tiles))
+        # Initialize the players' hands
+        self.player_hands = [self.draw_tiles(self.n_tiles) for i in range(self.n_players)]
+
+        # Reset the board
+        self.board = np.zeros((self.grid_length, self.grid_length, 12), dtype=np.int32)
+
+        # set current player
+        self.current_player_num = random.randint(0, 1)
         self.turns_taken = 0
         self.done = False
-        logger.debug(f'\n\n---- NEW GAME ----')
+        #logger.debug(f'\n\n---- NEW GAME ----')
         return self.observation
 
     # Map how it outputs the game on cml
