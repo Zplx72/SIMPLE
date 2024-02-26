@@ -223,6 +223,32 @@ class QwirkleEnv(gym.Env):
         # maximum point can be counted as 432.
         #board = self.board
         # check illegal action
+                # Make sure the placement is not on a corner and is inside the board
+        if col < 0 or col >= len(self.grid_length):
+            done = True
+            reward = [1, 1]
+            reward[self.current_player_num] = -1
+        if row < 0 or row >= len(self.grid_length):
+            done = True
+            reward = [1, 1]
+            reward[self.current_player_num] = -1            
+        if col == 0 and row == 0:
+            done = True
+            reward = [1, 1]
+            reward[self.current_player_num] = -1
+        if col == 0 and row == len(self.grid_length) - 1:
+            done = True
+            reward = [1, 1]
+            reward[self.current_player_num] = -1
+        if col == len(self.grid_length) - 1 and row == len(self.grid_length) - 1:
+            done = True
+            reward = [1, 1]
+            reward[self.current_player_num] = -1
+        if col == len(self.grid_length) - 1 and row == 0:
+            done = True
+            reward = [1, 1]
+            reward[self.current_player_num] = -1
+
         if (self.board[row][col].any(1)):
             done = True
             reward = [1, 1]
@@ -230,6 +256,21 @@ class QwirkleEnv(gym.Env):
         # check if player can make a move, pass otherwise
         # place all the tiles you can in one step.
             # a while loop to place as many tiles as possible.
+
+        # Make sure the placement has at least one adjacent placement
+        adjacent_checks = []
+        if y - 1 >= 0:
+            adjacent_checks.append((self._board[y - 1][x] is None))
+        if y + 1 < len(self._board):
+            adjacent_checks.append((self._board[y + 1][x] is None))
+        if x - 1 >= 0:
+            adjacent_checks.append((self._board[y][x - 1] is None))
+        if x + 1 < len(self._board[y]):
+            adjacent_checks.append((self._board[y][x + 1] is None))
+
+        if all(adjacent_checks):
+            return False
+        
         else:
             self.board[row][col] = tile
             reward[self.current_player_num] = 1
