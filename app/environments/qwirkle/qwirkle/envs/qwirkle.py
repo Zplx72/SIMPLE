@@ -68,9 +68,9 @@ class QwirkleEnv(gym.Env):
 
         self.action_space = gym.spaces.Tuple((
         # The set of all possible actions an agent could take. In this case is the index of the tiles of the player's hand.
-        #gym.spaces.Discrete(self.n_tiles),  # The player's hand has 6 tiles
+        gym.spaces.Discrete(self.n_tiles*self.grid_length*self.grid_length),  # The player's hand has 6 tiles
         #gym.spaces.MultiBinary(self.n_tiles)
-        gym.spaces.MultiBinary((self.grid_length, self.grid_length))  # The board is grid_length x grid_length
+        # gym.spaces.MultiBinary((self.grid_length, self.grid_length))  # The board is grid_length x grid_length
         # Introduce the tile you are placing
         ))
 
@@ -212,11 +212,13 @@ class QwirkleEnv(gym.Env):
         # col = action % self.grid_length
         # row = action // self.grid_length
         # tile = action[1]
+        # you need to test the following. 
         tile = action % self.n_tiles
         two_d_index = action // self.n_tiles
         col = two_d_index % self.grid_length
         row = two_d_index // self.grid_length
 
+        # I need to update the state of the game , the board, remove the tile from the hand
 
         # maximum point can be counted as 432.
         #board = self.board
