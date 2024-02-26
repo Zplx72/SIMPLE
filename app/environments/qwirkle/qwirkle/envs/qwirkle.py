@@ -71,6 +71,7 @@ class QwirkleEnv(gym.Env):
         #gym.spaces.Discrete(self.n_tiles),  # The player's hand has 6 tiles
         #gym.spaces.MultiBinary(self.n_tiles)
         gym.spaces.MultiBinary((self.grid_length, self.grid_length))  # The board is grid_length x grid_length
+        # Introduce the tile you are placing
         ))
 
         # For a game like Tic Tac Toe, the observation space might be a 3x3 grid
@@ -147,18 +148,21 @@ class QwirkleEnv(gym.Env):
     # if it is empty and if it is legal to place a tile there.
     @property
     def legal_actions(self):
-        legal_actions = np.zeros((self.board.shape[0], self.board.shape[1]))
+        legal_actions = np.zeros((self.grid_length, self.grid_length))
 
         # Iterate over the cells on the board
         for i in range(self.board.shape[0]):
             for j in range(self.board.shape[1]):
                 # Check if the cell is empty
-                if np.all(self.board[i, j] == np.eye(12)[0]):  # Assuming the first tile is the "empty" tile
+                #if np.all(self.board[i, j] == np.eye(12)[0]):  # Assuming the first tile is the "empty" tile
+                if self.board[i, j].all(0):
                     # Check if placing a tile in this cell would be a legal action
                     # is_legal_action is a function that you need to write, 
                     # it should return True if the action is legal and False otherwise
-                    if self.is_legal_action(i, j):
+                    if self.board[i+1, j].any(1) or self.board[i-1, j].any(1) or self.board[i, j+1].any(1) or self.board[i, j-1].any(1): 
                         legal_actions[i, j] = 1
+                    # if self.is_legal_action(i, j):
+                    #     legal_actions[i, j] = 1
 
         return legal_actions
     # Start what you need and try to figure out how to do it. 
@@ -171,29 +175,13 @@ class QwirkleEnv(gym.Env):
 
     # again qwirkle implementation would havve this
     def check_game_over(self):
-
-        board = self.board
-        current_player_num = self.current_player_num
-        players = self.players
-
-
-        # check game over
-        for i in range(self.grid_length):
-            # horizontals and verticals
-            if ((self.square_is_player(i*self.grid_length,current_player_num) and self.square_is_player(i*self.grid_length+1,current_player_num) and self.square_is_player(i*self.grid_length+2,current_player_num))
-                or (self.square_is_player(i+0,current_player_num) and self.square_is_player(i+self.grid_length,current_player_num) and self.square_is_player(i+self.grid_length*2,current_player_num))):
-                return  1, True
-
-        # diagonals
-        if((self.square_is_player(0,current_player_num) and self.square_is_player(4,current_player_num) and self.square_is_player(8,current_player_num))
-            or (self.square_is_player(2,current_player_num) and self.square_is_player(4,current_player_num) and self.square_is_player(6,current_player_num))):
-                return  1, True
-
-        if self.turns_taken == self.num_squares:
-            logger.debug("Board full")
-            return  0, True
-
-        return 0, False
+        # Check if the bag of tiles is empty
+        if not self.bag_of_tiles:
+            # Check if any player has no tiles left
+            for player in self.players:
+                if not player.tiles:
+                    return True, player
+        return False, None
 
     @property
     # Nothing need to be changed, probably
@@ -219,9 +207,15 @@ class QwirkleEnv(gym.Env):
         # you don't need tunrs_taken. 
         # consider normalising the reward. 
         reward = [0,0]
-        col = action % self.grid_length
-        row = action // self.grid_length
-        tile = None
+
+        # Meeting 4: Don't take the location.As it is a bad idea.
+        # col = action % self.grid_length
+        # row = action // self.grid_length
+        # tile = action[1]
+        tile = action % self.n_tiles
+        two_d_index = action // self.n_tiles
+        col = two_d_index % self.grid_length
+        row = two_d_index // self.grid_length
 
 
         # maximum point can be counted as 432.
@@ -231,52 +225,25 @@ class QwirkleEnv(gym.Env):
             done = True
             reward = [1, 1]
             reward[self.current_player_num] = -1
+        # check if player can make a move, pass otherwise
+        # place all the tiles you can in one step.
+            # a while loop to place as many tiles as possible.
         else:
             self.board[row][col] = tile
             reward[self.current_player_num] = 1
             self.player_hands[self.current_player_num].remove(tile)
 
             # handle game over
-            
-            self.player_hands[self.current_player_num].append(self.draw_tiles(1))
+            done = self.check_game_over()
+            if not done:
+                # Draw a new tile for the player
+                self.player_hands[self.current_player_num].append(self.draw_tiles(1))
 
-            
-
-        
         self.current_player_num = (self.current_player_num + 1) % 2
         self.turns_taken += 1
 
-        
-
-
-
-        
-
-
-    def step(self, action):
-        
-        reward = [0,0]
-        
-        # check move legality
-        board = self.board
-        
-        if (board[action].number != 0):  # not empty
-            done = True
-            reward = [1, 1]
-            reward[self.current_player_num] = -1
-        else:
-            board[action] = self.current_player.token
-            self.turns_taken += 1
-            r, done = self.check_game_over()
-            reward = [-r,-r]
-            reward[self.current_player_num] = r
-
-        self.done = done
-
-        if not done:
-            self.current_player_num = (self.current_player_num + 1) % 2
-
         return self.observation, reward, done, {}
+
 
     # Dependent on how you define the board and how to reset this.
     def reset(self):
