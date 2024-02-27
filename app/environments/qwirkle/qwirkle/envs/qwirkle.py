@@ -80,6 +80,7 @@ class QwirkleEnv(gym.Env):
         # Initialize the bag of tiles going through each color
         # Step 2 of conversion, _bag_of_tiles, has been implemented and changed
         self._bag_of_tiles = []
+        self._tiles = []
         # print(len(self.bag_of_tiles))
 
         # Initialize the players' hands
