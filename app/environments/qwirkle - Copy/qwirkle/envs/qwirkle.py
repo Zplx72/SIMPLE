@@ -8,34 +8,6 @@ import numpy as np
 import random
 
 #from stable_baselines import logger
-class COLORS:
-    RED = 'red'
-    YELLOW = 'yellow'
-    GREEN = 'green'
-    CYAN = 'cyan'
-    MAGENTA = 'magenta'
-    BLUE = 'blue'
-
-
-class SHAPES:
-    TRIANGLE = '▲'
-    DIAMOND = '◆'
-    SQUARE = '■'
-    CIRCLE = '●'
-    STAR = '★'
-    SPARKLE = '❈'
-
-
-class Piece:
-    def __init__(self, color=None, shape=None):
-        self.color = color
-        self.shape = shape
-
-    def __str__(self):
-        return '%s %s' % (self.color, self.shape)
-
-    def __repr__(self):
-        return self.__str__()
 
 colours = ['red', 'orange', 'yellow', 'green', 'blue', 'purple']
 shapes = ['circle', 'square', 'diamond', 'clover', 'star', 'cross']
@@ -195,7 +167,6 @@ class QwirkleEnv(gym.Env):
         return legal_actions
     # Start what you need and try to figure out how to do it. 
 
-    def is_legal_action(self, row, col):
 
     # check where this is coming from. 
     def square_is_player(self, square, player):
