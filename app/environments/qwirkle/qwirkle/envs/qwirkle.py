@@ -8,6 +8,11 @@ import numpy as np
 import random
 
 #from stable_baselines import logger
+
+# colours = ['red', 'orange', 'yellow', 'green', 'blue', 'purple']
+# shapes = ['circle', 'square', 'diamond', 'clover', 'star', 'cross']
+# Step 1: conversion of how the tiles are represented.
+
 class COLORS:
     RED = 'red'
     YELLOW = 'yellow'
@@ -18,12 +23,12 @@ class COLORS:
 
 
 class SHAPES:
-    TRIANGLE = '▲'
-    DIAMOND = '◆'
-    SQUARE = '■'
-    CIRCLE = '●'
-    STAR = '★'
-    SPARKLE = '❈'
+    TRIANGLE = 'triangle'
+    DIAMOND = 'diamond'
+    SQUARE = 'square'
+    CIRCLE = 'circle'
+    STAR = 'star'
+    SPARKLE = 'sparkle'
 
 
 class Piece:
@@ -37,9 +42,6 @@ class Piece:
     def __repr__(self):
         return self.__str__()
 
-colours = ['red', 'orange', 'yellow', 'green', 'blue', 'purple']
-shapes = ['circle', 'square', 'diamond', 'clover', 'star', 'cross']
-bag_of_tiles = [(colour, shape) for colour in colours for shape in shapes for i in range(3)]
 
 
 class Player():
@@ -70,13 +72,14 @@ class QwirkleEnv(gym.Env):
         self.manual = manual
         
         # color_to_dimesion 
-        self.colours = ['red', 'orange', 'yellow', 'green', 'blue', 'purple']
-        self.shapes = ['circle', 'square', 'diamond', 'clover', 'star', 'cross']
+        # self.colours = ['red', 'orange', 'yellow', 'green', 'blue', 'purple']
+        # self.shapes = ['circle', 'square', 'diamond', 'clover', 'star', 'cross']
         self.n_tiles = 6
         self.n_players = 2
 
         # Initialize the bag of tiles going through each color
-        self.bag_of_tiles = [(colour, shape) for colour in self.colours for shape in self.shapes for i in range(3)]
+        # Step 2 of conversion, _bag_of_tiles, has been implemented and changed
+        self._bag_of_tiles = []
         print(len(self.bag_of_tiles))
         # Initialize the players' hands
         self.player_hands = [self.draw_tiles(self.n_tiles) for i in range(self.n_players)]
@@ -115,7 +118,33 @@ class QwirkleEnv(gym.Env):
         self.verbose = verbose
 
     # Anything that part of the RL game is not part of the qwirkle implementation. Like reward, action, 
+    
+    # Step 2 of conversion, _bag_of_tiles, has been implemented and changed continued. 
+    def _generate_new_bag_of_tiles(self):
+        self._bag_of_tiles = []
 
+        shapes = [
+            SHAPES.CIRCLE,
+            SHAPES.DIAMOND,
+            SHAPES.SPARKLE,
+            SHAPES.SQUARE,
+            SHAPES.STAR,
+            SHAPES.TRIANGLE
+        ]
+
+        colors = [
+            COLORS.BLUE,
+            COLORS.CYAN,
+            COLORS.GREEN,
+            COLORS.MAGENTA,
+            COLORS.RED,
+            COLORS.YELLOW
+        ]
+
+        for i in range(3):
+            for c in range(len(colors)):
+                for s in range(len(shapes)):
+                    self._bag_of_tiles.append(Piece(color=colors[c], shape=shapes[s]))    
     # NEW: I only need tot store the action and the state, I need to call over the other game.  
     #If there are tiles left in the bag, it randomly selects one, removes it from the bag, and adds it to 
     #the list of drawn tiles. If there are no tiles left in the bag, it breaks out of the loop and returns the tiles that were drawn. 
