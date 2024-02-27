@@ -2,10 +2,10 @@
 
 # Metting 2: observation space, you encoded your own game board and your tiles, and they have (qwrikle game) to link it.
 # 
-
+from random import Random
 import gym
 import numpy as np
-import random
+
 
 #from stable_baselines import logger
 
@@ -80,9 +80,10 @@ class QwirkleEnv(gym.Env):
         # Initialize the bag of tiles going through each color
         # Step 2 of conversion, _bag_of_tiles, has been implemented and changed
         self._bag_of_tiles = []
-        print(len(self.bag_of_tiles))
+        # print(len(self.bag_of_tiles))
+
         # Initialize the players' hands
-        self.player_hands = [self.draw_tiles(self.n_tiles) for i in range(self.n_players)]
+        # self.player_hands = [self.draw_tiles(self.n_tiles) for i in range(self.n_players)]
 
         # No need for all the grid stuff perhaps something similar.
         self.grid_length = 91
@@ -145,6 +146,16 @@ class QwirkleEnv(gym.Env):
             for c in range(len(colors)):
                 for s in range(len(shapes)):
                     self._bag_of_tiles.append(Piece(color=colors[c], shape=shapes[s]))    
+    
+
+    # step 3 of conversion: add the pick tiles function
+    def pick_tiles(self, bag_of_tiles):
+        rnd = Random()
+        while len(self._tiles) < 6 and len(bag_of_tiles) > 0:
+            i = rnd.randint(0, len(bag_of_tiles) - 1)
+
+            self._tiles.append(bag_of_tiles.pop(i))    
+
     # NEW: I only need tot store the action and the state, I need to call over the other game.  
     #If there are tiles left in the bag, it randomly selects one, removes it from the bag, and adds it to 
     #the list of drawn tiles. If there are no tiles left in the bag, it breaks out of the loop and returns the tiles that were drawn. 
