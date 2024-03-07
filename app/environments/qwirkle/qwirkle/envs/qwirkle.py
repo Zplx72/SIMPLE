@@ -92,20 +92,21 @@ class QwirkleEnv(gym.Env):
         self.grid_shape = (self.grid_length, self.grid_length)
     
         # Initialize the board
-        self.board = np.zeros((self.grid_length, self.grid_length, 12), dtype=np.int32)
+        # 12 has been gotten rid of as, the only thing on the board would be an integer mapped from the tile to the class. 
+        self.board = np.zeros((self.grid_length, self.grid_length), dtype=np.int32)
 
 
         #Most importatn one is the action space and observation space
         # The action space is the number of squares on the board, as you can place a token on any square
         # self.action_space = gym.spaces.Discrete(self.num_squares)
 
-        self.action_space = gym.spaces.Tuple((
+        self.action_space = gym.spaces.Discrete(self.n_tiles*self.grid_length*self.grid_length)
         # The set of all possible actions an agent could take. In this case is the index of the tiles of the player's hand.
-        gym.spaces.Discrete(self.n_tiles*self.grid_length*self.grid_length),  # The player's hand has 6 tiles
-        #gym.spaces.MultiBinary(self.n_tiles)
+        # gym.spaces.Discrete(self.n_tiles*self.grid_length*self.grid_length),  # The player's hand has 6 tiles
+        # #gym.spaces.MultiBinary(self.n_tiles)
         # gym.spaces.MultiBinary((self.grid_length, self.grid_length))  # The board is grid_length x grid_length
         # Introduce the tile you are placing
-        ))
+        
 
         # For a game like Tic Tac Toe, the observation space might be a 3x3 grid
         # where each cell can be in one of three states (empty, occupied by player 1, or occupied by player 2)
@@ -114,8 +115,9 @@ class QwirkleEnv(gym.Env):
         # NEW: you need to observe the hand as well
         # NEW: put what the algorithm does as a flowchart. 
         self.observation_space = gym.spaces.Tuple((
-            gym.spaces.Box(low=0, high=1, shape=(self.n_tiles, 12), dtype=np.int32),  # Player's hand
-            gym.spaces.Box(low=0, high=1, shape=(self.grid_length, self.grid_length, 12), dtype=np.int32)  # Board
+            # step 4: observation space is modified, to encode each tile to be an integer.
+            gym.spaces.Box(low=0, high=36, shape=(self.n_tiles,), dtype=np.int32),  # Player's hand
+            gym.spaces.Box(low=0, high=36, shape=(self.grid_length, self.grid_length), dtype=np.int32)  # Board
         ))     
         self.verbose = verbose
 
