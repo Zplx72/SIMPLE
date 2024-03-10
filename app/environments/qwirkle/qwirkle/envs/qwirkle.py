@@ -161,7 +161,51 @@ class QwirkleEnv(gym.Env):
 
             self._tiles.append(bag_of_tiles.pop(i))    
 
-    def piece_to_float_convewrter():
+    # converts the piece from an object to it's float represetnation. 
+            # it checks if the dictionary exists and if so it will look up the color and shape to find the decimal for it
+            # if not it creates the dictionary and does that. 
+    def piece_to_float_convewrter(self, piece):
+        piece = str(piece)
+        if len(self.look_up_dict) == 36:
+            piece_in_float = self.look_up_dict[piece]
+            return piece_in_float
+        else:
+            float_auxilary = -0.90
+            counter = 0
+            shapes = [
+                SHAPES.CIRCLE,
+                SHAPES.DIAMOND,
+                SHAPES.SPARKLE,
+                SHAPES.SQUARE,
+                SHAPES.STAR,
+                SHAPES.TRIANGLE
+            ]
+
+            colors = [
+                COLORS.BLUE,
+                COLORS.CYAN,
+                COLORS.GREEN,
+                COLORS.MAGENTA,
+                COLORS.RED,
+                COLORS.YELLOW
+            ]
+
+            for c in range(len(colors)):
+                for s in range(len(shapes)):
+                    zero_check = round(float_auxilary + (counter * 0.05), 2)
+                    if zero_check == 0:
+                        zero_check = round(zero_check + 0.05, 2)
+                        counter += 1
+                    self.look_up_dict[str(Piece(color=colors[c], shape=shapes[s]))] = zero_check
+                    counter += 1
+        
+            # # print(look_up_dict)
+            # # print(type(piece))
+            # # Assuming 'look_up_dict' is your dictionary
+            # first_key = next(iter(look_up_dict))
+            # print(type(first_key))
+            piece_in_float = self.look_up_dict[str(piece)]
+            return piece_in_float
 
 
     # NEW: I only need tot store the action and the state, I need to call over the other game.  
