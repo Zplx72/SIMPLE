@@ -5,6 +5,7 @@
 from random import Random
 import gym
 import numpy as np
+import random
 
 
 #from stable_baselines import logger
@@ -115,9 +116,10 @@ class QwirkleEnv(gym.Env):
         # NEW: you need to observe the hand as well
         # NEW: put what the algorithm does as a flowchart. 
         self.observation_space = gym.spaces.Tuple((
-            # step 4: observation space is modified, to encode each tile to be an integer.
-            gym.spaces.Box(low=0, high=36, shape=(self.n_tiles,), dtype=np.int32),  # Player's hand
-            gym.spaces.Box(low=0, high=36, shape=(self.grid_length, self.grid_length), dtype=np.int32)  # Board
+            # step 4: observation space is modified, to encode each tile to be an float between -1 and 1.
+            # Question: is there a significance in if the box value is negative or postive????
+            gym.spaces.Box(low=-1, high=1, shape=(self.n_tiles,), dtype=np.float32),  # Player's hand
+            gym.spaces.Box(low=-1, high=1, shape=(self.grid_length, self.grid_length), dtype=np.float32)  # Board
         ))     
         self.verbose = verbose
 
@@ -163,16 +165,16 @@ class QwirkleEnv(gym.Env):
     #If there are tiles left in the bag, it randomly selects one, removes it from the bag, and adds it to 
     #the list of drawn tiles. If there are no tiles left in the bag, it breaks out of the loop and returns the tiles that were drawn. 
     #This way, the game can continue even if there are no tiles left to draw.          
-    def draw_tiles(self, num_tiles):
-        tiles = []
-        for i in range(num_tiles):
-            if self.bag_of_tiles:
-                tile = random.choice(self.bag_of_tiles)
-                self.bag_of_tiles.remove(tile)
-                tiles.append(tile)
-            else:
-                break
-        return tiles   
+    # def draw_tiles(self, num_tiles):
+    #     tiles = []
+    #     for i in range(num_tiles):
+    #         if self.bag_of_tiles:
+    #             tile = random.choice(self.bag_of_tiles)
+    #             self.bag_of_tiles.remove(tile)
+    #             tiles.append(tile)
+    #         else:
+    #             break
+    #     return tiles   
         
     def place_tile(self, row, col, color, shape):
         # Reset the cell's state
@@ -238,7 +240,7 @@ class QwirkleEnv(gym.Env):
         return legal_actions
     # Start what you need and try to figure out how to do it. 
 
-    def is_legal_action(self, row, col):
+    # def is_legal_action(self, row, col):
 
     # check where this is coming from. 
     def square_is_player(self, square, player):
@@ -275,7 +277,7 @@ class QwirkleEnv(gym.Env):
     ### They have taken the step, after they make a move you day if the move was good or bad.
     # self does contain the board. 
     def step(self, action):
-        #once it took an action what would you do with that just say if it is a good idea or not. 
+        # once it took an action what would you do with that just say if it is a good idea or not. 
         # you don't need tunrs_taken. 
         # consider normalising the reward. 
         reward = [0,0]
