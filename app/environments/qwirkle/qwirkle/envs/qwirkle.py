@@ -107,7 +107,7 @@ class QwirkleEnv(gym.Env):
         # #gym.spaces.MultiBinary(self.n_tiles)
         # gym.spaces.MultiBinary((self.grid_length, self.grid_length))  # The board is grid_length x grid_length
         # Introduce the tile you are placing
-        
+        self.look_up_dict = {}
 
         # For a game like Tic Tac Toe, the observation space might be a 3x3 grid
         # where each cell can be in one of three states (empty, occupied by player 1, or occupied by player 2)
@@ -161,6 +161,9 @@ class QwirkleEnv(gym.Env):
 
             self._tiles.append(bag_of_tiles.pop(i))    
 
+    def piece_to_float_convewrter():
+
+
     # NEW: I only need tot store the action and the state, I need to call over the other game.  
     #If there are tiles left in the bag, it randomly selects one, removes it from the bag, and adds it to 
     #the list of drawn tiles. If there are no tiles left in the bag, it breaks out of the loop and returns the tiles that were drawn. 
@@ -175,14 +178,18 @@ class QwirkleEnv(gym.Env):
     #         else:
     #             break
     #     return tiles   
-        
-    def place_tile(self, row, col, color, shape):
-        # Reset the cell's state
-        self.board[row, col] = np.zeros(12, dtype=np.int32)
 
-        # Set the dimensions corresponding to the tile's color and shape
-        self.board[row, col, self.color_to_dimension[color]] = 1
-        self.board[row, col, self.shape_to_dimension[shape]] = 1  
+    #ATENTION!!!!!#### Step 5 of conversion: get rid of place_tile as it is not needed in this format. 
+    # When you progress more you will know how to change it to convert the tile from the class tiles to different floats between -1 and 1.
+            
+
+    # def place_tile(self, row, col, color, shape):
+    #     # Reset the cell's state
+    #     self.board[row, col] = np.zeros(12, dtype=np.int32)
+
+    #     # Set the dimensions corresponding to the tile's color and shape
+    #     self.board[row, col, self.color_to_dimension[color]] = 1
+    #     self.board[row, col, self.shape_to_dimension[shape]] = 1  
 
 
     # @property
@@ -202,7 +209,7 @@ class QwirkleEnv(gym.Env):
     #     out = np.stack([position,la_grid], axis = -1)
     #     return out
 
-    # This is different that observation in init. this runs every round but init runs only once.
+    # This is different that observation in init. this runs every round but init runs only once. PS, very useful comment.
     @property
     def observation(self):
         # Get the state of the board
