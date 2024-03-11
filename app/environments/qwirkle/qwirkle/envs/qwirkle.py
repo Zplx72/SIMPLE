@@ -164,7 +164,7 @@ class QwirkleEnv(gym.Env):
     # converts the piece from an object to it's float represetnation. 
             # it checks if the dictionary exists and if so it will look up the color and shape to find the decimal for it
             # if not it creates the dictionary and does that. 
-    def piece_to_float_convewrter(self, piece):
+    def piece_to_float_converter(self, piece):
         piece = str(piece)
         if len(self.look_up_dict) == 36:
             piece_in_float = self.look_up_dict[piece]
@@ -327,6 +327,192 @@ class QwirkleEnv(gym.Env):
     # for tictactoe it is 1 0 -1 but then the reward for qwirkle is differetn points. 
     ### They have taken the step, after they make a move you day if the move was good or bad.
     # self does contain the board. 
+    def _is_play_valid(self, piece, x, y):
+        """Validates a move is within the board, not on the corners, not
+           replacing a existing piece, adjacent to an existing tile and valid in
+           its row/column"""
+
+        # Make sure the placement is not on a corner and is inside the board
+        if x < 0 or x >= len(self._board[0]):
+            return False
+        if y < 0 or y >= len(self._board):
+            return False
+        if x == 0 and y == 0:
+            return False
+        if x == 0 and y == len(self._board) - 1:
+            return False
+        if x == len(self._board[0]) - 1 and y == len(self._board) - 1:
+            return False
+        if x == len(self._board[0]) - 1 and y == 0:
+            return False
+
+        # Make sure the placement is not already taken
+        if self._board[y][x] is not None:
+            return False
+
+        # Make sure the placement has at least one adjacent placement
+        adjacent_checks = []
+        if y - 1 >= 0:
+            adjacent_checks.append((self._board[y - 1][x] is None))
+        if y + 1 < len(self._board):
+            adjacent_checks.append((self._board[y + 1][x] is None))
+        if x - 1 >= 0:
+            adjacent_checks.append((self._board[y][x - 1] is None))
+        if x + 1 < len(self._board[y]):
+            adjacent_checks.append((self._board[y][x + 1] is None))
+
+        if all(adjacent_checks):
+            return False
+
+        # Validate the play connects to an existing play
+        plays = [(play[0], play[1]) for play in self._plays]
+        if len(plays) > 0:
+            check_horizontal = True
+            check_vertical = True
+            if len(plays) > 1:
+                if plays[0][0] == plays[1][0]:
+                    check_horizontal = False
+                if plays[0][1] == plays[1][1]:
+                    check_vertical = False
+
+            in_plays = False
+
+            if check_horizontal:
+                t_x = x
+                while t_x - 1 >= 0 and self._board[y][t_x - 1] is not None:
+                    t_x -= 1
+                    if (t_x, y) in plays:
+                        in_plays = True
+
+                t_x = x
+                while t_x + 1 < len(self._board[y]) and self._board[y][t_x + 1] is not None:
+                    t_x += 1
+                    if (t_x, y) in plays:
+                        in_plays = True
+
+            if check_vertical:
+                t_y = y
+                while t_y - 1 >= 0 and self._board[t_y - 1][x] is not None:
+                    t_y -= 1
+                    if (x, t_y) in plays:
+                        in_plays = True
+
+                t_y = y
+                while t_y + 1 < len(self._board) and self._board[t_y + 1][x] is not None:
+                    t_y += 1
+                    if (x, t_y) in plays:
+                        in_plays = True
+
+            if not in_plays:
+                return False
+
+        # Don't test for piece shape/color if no piece provided
+        if piece is None:
+            return True
+
+        # Get & Verify all the tiles adjacent horizontally
+        row = [piece]
+        t_x = x + 1
+        while t_x < len(self._board[0]) and self._board[y][t_x] is not None:
+            row.append(self._board[y][t_x])
+            t_x += 1
+
+        t_x = x - 1
+        while t_x >= 0 and self._board[y][t_x] is not None:
+            row.append(self._board[y][t_x])
+            t_x -= 1
+
+        if not self._is_row_valid(row):
+            return False
+
+        # Get & Verify all the tiles adjacent vertically
+        row = [piece]
+        t_y = y + 1
+        while t_y < len(self._board) and self._board[t_y][x] is not None:
+            row.append(self._board[t_y][x])
+            t_y += 1
+
+        t_y = y - 1
+        while t_y >= 0 and self._board[t_y][x] is not None:
+            row.append(self._board[t_y][x])
+            t_y -= 1
+
+        if not self._is_row_valid(row):
+            return False
+
+        return True
+
+    def _is_row_valid(self, row):
+        """If all row colors are equal, check each shape shows up at most once.
+           If all shapes are equal, check each color shows up at most once.
+           Otherwise the row is invalid."""
+
+        if len(row) == 1:
+            return True
+
+        if all(row[i].color == row[0].color for i in range(len(row))):
+            shapes = []
+            for i in range(len(row)):
+                if row[i].shape in shapes:
+                    return False
+                shapes.append(row[i].shape)
+
+        elif all(row[i].shape == row[0].shape for i in range(len(row))):
+            colors = []
+            for i in range(len(row)):
+                if row[i].color in colors:
+                    return False
+                colors.append(row[i].color)
+
+        else:
+            return False
+
+        return True
+
+    def _pad_board(self):
+        """Ensures there is a padding of empty spots around the board, update the plays"""
+
+        # Check for top padding
+        if any(self._board[0][i] is not None for i in range(len(self._board[0]))):
+            self._board.insert(0, [None] * (len(self._board[0])))
+            self._plays = [(play[0], play[1]+1) for play in self._plays]
+            self._last_plays = [(play[0], play[1]+1) for play in self._last_plays]
+
+        # Check for bottom padding
+        bottom = len(self._board) - 1
+        if any(self._board[bottom][i] is not None for i in range(len(self._board[0]))):
+            self._board += [[None] * (len(self._board[0]))]
+
+        # Left padding
+        if any(self._board[i][0] is not None for i in range(len(self._board))):
+            for i in range(len(self._board)):
+                self._board[i].insert(0, None)
+            self._plays = [(play[0] + 1, play[1]) for play in self._plays]
+            self._last_plays = [(play[0] + 1, play[1]) for play in self._last_plays]
+
+        # Right padding
+        right = len(self._board[0]) - 1
+        if any(self._board[i][right] is not None for i in range(len(self._board))):
+            for i in range(len(self._board)):
+                self._board[i] += [None]
+
+
+
+    def step(self, action):
+        # once it took an action what would you do with that just say if it is a good idea or not. 
+        # you don't need tunrs_taken. 
+        # consider normalising the reward. 
+        reward = [0,0]
+    
+        tile_index = action % self.n_tiles
+        two_d_index = action // self.n_tiles
+        col = two_d_index % self.grid_length
+        row = two_d_index // self.grid_length
+
+        piece_to_float = self.piece_to_float_converter(self._tiles[tile_index])
+        
+
+
     def step(self, action):
         # once it took an action what would you do with that just say if it is a good idea or not. 
         # you don't need tunrs_taken. 
