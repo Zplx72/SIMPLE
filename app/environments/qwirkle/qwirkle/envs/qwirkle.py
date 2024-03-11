@@ -508,14 +508,20 @@ class QwirkleEnv(gym.Env):
         # you don't need tunrs_taken. 
         # consider normalising the reward. 
         reward = [0,0]
-    
+
         tile_index = action % self.n_tiles
         two_d_index = action // self.n_tiles
         col = two_d_index % self.grid_length
         row = two_d_index // self.grid_length
 
-        piece_to_float = self.piece_to_float_converter(self._tiles[tile_index])
         
+        # the three funcitons will be written down here, checks will be done and if it is true then the "_board" will be updated
+        # Here is where the functions go. 
+
+        
+        # the numeric board will be updated AFTER the _board is updated. 
+        
+        piece_to_float = self.piece_to_float_converter(self._tiles[tile_index])
 
 
     def step(self, action):
