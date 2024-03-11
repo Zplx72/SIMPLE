@@ -94,7 +94,12 @@ class QwirkleEnv(gym.Env):
     
         # Initialize the board
         # 12 has been gotten rid of as, the only thing on the board would be an integer mapped from the tile to the class. 
+
+        # This board is purly numeric.
         self.board = np.zeros((self.grid_length, self.grid_length), dtype=np.int32)
+
+        # This board is aligned with what the other source code have. 
+        self._board = [[None] * self.grid_length for i in range(self.grid_length)]
 
 
         #Most importatn one is the action space and observation space
