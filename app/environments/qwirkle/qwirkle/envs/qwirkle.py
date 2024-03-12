@@ -8,7 +8,7 @@ import numpy as np
 import random
 
 
-#from stable_baselines import logger
+from stable_baselines import logger
 
 # colours = ['red', 'orange', 'yellow', 'green', 'blue', 'purple']
 # shapes = ['circle', 'square', 'diamond', 'clover', 'star', 'cross']
@@ -101,6 +101,8 @@ class QwirkleEnv(gym.Env):
         # This board is aligned with what the other source code have. 
         self._board = [[None] * self.grid_length for i in range(self.grid_length)]
 
+        # It is like a history of plays, in the game this can happen more than once in one round. 
+        self._plays = []
 
         #Most importatn one is the action space and observation space
         # The action space is the number of squares on the board, as you can place a token on any square
@@ -228,7 +230,7 @@ class QwirkleEnv(gym.Env):
     #             break
     #     return tiles   
 
-    #ATENTION!!!!!#### Step 5 of conversion: get rid of place_tile as it is not needed in this format. 
+    # ATENTION!!!!!#### Step 5 of conversion: get rid of place_tile as it is not needed in this format. 
     # When you progress more you will know how to change it to convert the tile from the class tiles to different floats between -1 and 1.
             
 
@@ -474,34 +476,6 @@ class QwirkleEnv(gym.Env):
 
         return True
 
-    def _pad_board(self):
-        """Ensures there is a padding of empty spots around the board, update the plays"""
-
-        # Check for top padding
-        if any(self._board[0][i] is not None for i in range(len(self._board[0]))):
-            self._board.insert(0, [None] * (len(self._board[0])))
-            self._plays = [(play[0], play[1]+1) for play in self._plays]
-            self._last_plays = [(play[0], play[1]+1) for play in self._last_plays]
-
-        # Check for bottom padding
-        bottom = len(self._board) - 1
-        if any(self._board[bottom][i] is not None for i in range(len(self._board[0]))):
-            self._board += [[None] * (len(self._board[0]))]
-
-        # Left padding
-        if any(self._board[i][0] is not None for i in range(len(self._board))):
-            for i in range(len(self._board)):
-                self._board[i].insert(0, None)
-            self._plays = [(play[0] + 1, play[1]) for play in self._plays]
-            self._last_plays = [(play[0] + 1, play[1]) for play in self._last_plays]
-
-        # Right padding
-        right = len(self._board[0]) - 1
-        if any(self._board[i][right] is not None for i in range(len(self._board))):
-            for i in range(len(self._board)):
-                self._board[i] += [None]
-
-
 
     def step(self, action):
         # once it took an action what would you do with that just say if it is a good idea or not. 
@@ -512,16 +486,32 @@ class QwirkleEnv(gym.Env):
         tile_index = action % self.n_tiles
         two_d_index = action // self.n_tiles
         col = two_d_index % self.grid_length
-        row = two_d_index // self.grid_length
+        _row = two_d_index // self.grid_length
 
-        
         # the three funcitons will be written down here, checks will be done and if it is true then the "_board" will be updated
         # Here is where the functions go. 
 
+        # you check if the play is valid. 
+        bool_valid_play = self._is_play_valid(piece=self._tiles[tile_index], x = col, y = _row)
+        if not bool_valid_play:
+            done = True
+            reward = [1, 1]
+            reward[self.current_player_num] = -1
+        else:
+            # Two things need to be done
+            return
         
+        # I think if the game is done then the player changes to be the other one?
+        # what would that indicate though
+        self.done = done
+
+        if not done:
+            self.current_player_num = (self.current_player_num + 1) % 2
+
         # the numeric board will be updated AFTER the _board is updated. 
-        
         piece_to_float = self.piece_to_float_converter(self._tiles[tile_index])
+        
+        return self.observation, reward, done, {}
 
 
     def step(self, action):
