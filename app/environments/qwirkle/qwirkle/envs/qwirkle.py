@@ -334,6 +334,71 @@ class QwirkleEnv(gym.Env):
     # for tictactoe it is 1 0 -1 but then the reward for qwirkle is differetn points. 
     ### They have taken the step, after they make a move you day if the move was good or bad.
     # self does contain the board. 
+
+    def score(self):
+        """Return the score for the current turn"""
+        if len(self._plays) == 0:
+            return 0
+
+        score = 0
+        scored_horizontally = []
+        scored_vertically = []
+
+        for play in self._plays:
+            x, y = play
+
+            min_x = x
+            while min_x - 1 >= 0 and self._board[y][min_x - 1] is not None:
+                min_x -= 1
+
+            max_x = x
+            while max_x + 1 < len(self._board[y]) and self._board[y][max_x + 1] is not None:
+                max_x += 1
+
+            if min_x != max_x:
+                qwirkle_count = 0
+                for t_x in range(min_x, max_x + 1):
+                    if (t_x, y) not in scored_horizontally:
+                        score += 1
+                        qwirkle_count += 1
+                        scored_horizontally.append((t_x, y))
+
+                        if (x, y) not in scored_horizontally:
+                            score += 1
+                            qwirkle_count += 1
+                            scored_horizontally.append((x, y))
+                    t_x += 1
+
+                if qwirkle_count == 6:
+                    score += 6
+
+            min_y = y
+            while min_y - 1 >= 0 and self._board[min_y - 1][x] is not None:
+                min_y -= 1
+
+            max_y = y
+            while max_y + 1 < len(self._board) and self._board[max_y + 1][x] is not None:
+                max_y += 1
+
+            if min_y != max_y:
+                qwirkle_count = 0
+                for t_y in range(min_y, max_y + 1):
+                    if (x, t_y) not in scored_vertically:
+                        score += 1
+                        qwirkle_count += 1
+                        scored_vertically.append((x, t_y))
+
+                        if (x, y) not in scored_vertically:
+                            score += 1
+                            qwirkle_count += 1
+                            scored_vertically.append((x, y))
+                    t_y += 1
+
+                if qwirkle_count == 6:
+                    score += 6
+
+        return score
+
     def _is_play_valid(self, piece, x, y):
         """Validates a move is within the board, not on the corners, not
            replacing a existing piece, adjacent to an existing tile and valid in
@@ -495,11 +560,21 @@ class QwirkleEnv(gym.Env):
         bool_valid_play = self._is_play_valid(piece=self._tiles[tile_index], x = col, y = _row)
         if not bool_valid_play:
             done = True
-            reward = [1, 1]
-            reward[self.current_player_num] = -1
+            reward = [10, 10]
+            reward[self.current_player_num] = -10
         else:
-            # Two things need to be done
-            return
+            # Two things need to be done, updating both boards: _board and board. 
+            done = False
+            # The None, and tile_index is done. 
+            self._board[_row][col] = self._tiles[tile_index]
+            
+            # The numerical has been done. 
+            self.board[_row][col] = self.piece_to_float_converter(self._tiles[tile_index])
+            
+            # figuring out some sort of a scoring system. 
+            score = self.score()
+
+            reward[self.current_player_num] = score
         
         # I think if the game is done then the player changes to be the other one?
         # what would that indicate though
@@ -508,96 +583,94 @@ class QwirkleEnv(gym.Env):
         if not done:
             self.current_player_num = (self.current_player_num + 1) % 2
 
-        # the numeric board will be updated AFTER the _board is updated. 
-        piece_to_float = self.piece_to_float_converter(self._tiles[tile_index])
         
         return self.observation, reward, done, {}
 
 
-    def step(self, action):
-        # once it took an action what would you do with that just say if it is a good idea or not. 
-        # you don't need tunrs_taken. 
-        # consider normalising the reward. 
-        reward = [0,0]
+    # def step(self, action):
+    #     # once it took an action what would you do with that just say if it is a good idea or not. 
+    #     # you don't need tunrs_taken. 
+    #     # consider normalising the reward. 
+    #     reward = [0,0]
 
-        # Meeting 4: Don't take the location.As it is a bad idea.
-        # col = action % self.grid_length
-        # row = action // self.grid_length
-        # tile = action[1]
-        # you need to test the following. 
-        tile = action % self.n_tiles
-        two_d_index = action // self.n_tiles
-        col = two_d_index % self.grid_length
-        row = two_d_index // self.grid_length
+    #     # Meeting 4: Don't take the location.As it is a bad idea.
+    #     # col = action % self.grid_length
+    #     # row = action // self.grid_length
+    #     # tile = action[1]
+    #     # you need to test the following. 
+    #     tile = action % self.n_tiles
+    #     two_d_index = action // self.n_tiles
+    #     col = two_d_index % self.grid_length
+    #     row = two_d_index // self.grid_length
 
-        # I need to update the state of the game , the board, remove the tile from the hand
+    #     # I need to update the state of the game , the board, remove the tile from the hand
 
-        # maximum point can be counted as 432.
-        #board = self.board
-        # check illegal action
-                # Make sure the placement is not on a corner and is inside the board
-        if col < 0 or col >= len(self.grid_length):
-            done = True
-            reward = [1, 1]
-            reward[self.current_player_num] = -1
-        if row < 0 or row >= len(self.grid_length):
-            done = True
-            reward = [1, 1]
-            reward[self.current_player_num] = -1            
-        if col == 0 and row == 0:
-            done = True
-            reward = [1, 1]
-            reward[self.current_player_num] = -1
-        if col == 0 and row == len(self.grid_length) - 1:
-            done = True
-            reward = [1, 1]
-            reward[self.current_player_num] = -1
-        if col == len(self.grid_length) - 1 and row == len(self.grid_length) - 1:
-            done = True
-            reward = [1, 1]
-            reward[self.current_player_num] = -1
-        if col == len(self.grid_length) - 1 and row == 0:
-            done = True
-            reward = [1, 1]
-            reward[self.current_player_num] = -1
+    #     # maximum point can be counted as 432.
+    #     #board = self.board
+    #     # check illegal action
+    #             # Make sure the placement is not on a corner and is inside the board
+    #     if col < 0 or col >= len(self.grid_length):
+    #         done = True
+    #         reward = [1, 1]
+    #         reward[self.current_player_num] = -1
+    #     if row < 0 or row >= len(self.grid_length):
+    #         done = True
+    #         reward = [1, 1]
+    #         reward[self.current_player_num] = -1            
+    #     if col == 0 and row == 0:
+    #         done = True
+    #         reward = [1, 1]
+    #         reward[self.current_player_num] = -1
+    #     if col == 0 and row == len(self.grid_length) - 1:
+    #         done = True
+    #         reward = [1, 1]
+    #         reward[self.current_player_num] = -1
+    #     if col == len(self.grid_length) - 1 and row == len(self.grid_length) - 1:
+    #         done = True
+    #         reward = [1, 1]
+    #         reward[self.current_player_num] = -1
+    #     if col == len(self.grid_length) - 1 and row == 0:
+    #         done = True
+    #         reward = [1, 1]
+    #         reward[self.current_player_num] = -1
 
-        if (self.board[row][col].any(1)):
-            done = True
-            reward = [1, 1]
-            reward[self.current_player_num] = -1
-        # check if player can make a move, pass otherwise
-        # place all the tiles you can in one step.
-            # a while loop to place as many tiles as possible.
+    #     if (self.board[row][col].any(1)):
+    #         done = True
+    #         reward = [1, 1]
+    #         reward[self.current_player_num] = -1
+    #     # check if player can make a move, pass otherwise
+    #     # place all the tiles you can in one step.
+    #         # a while loop to place as many tiles as possible.
 
-        # Make sure the placement has at least one adjacent placement
-        adjacent_checks = []
-        if y - 1 >= 0:
-            adjacent_checks.append((self._board[y - 1][x] is None))
-        if y + 1 < len(self._board):
-            adjacent_checks.append((self._board[y + 1][x] is None))
-        if x - 1 >= 0:
-            adjacent_checks.append((self._board[y][x - 1] is None))
-        if x + 1 < len(self._board[y]):
-            adjacent_checks.append((self._board[y][x + 1] is None))
+    #     # Make sure the placement has at least one adjacent placement
+    #     adjacent_checks = []
+    #     if y - 1 >= 0:
+    #         adjacent_checks.append((self._board[y - 1][x] is None))
+    #     if y + 1 < len(self._board):
+    #         adjacent_checks.append((self._board[y + 1][x] is None))
+    #     if x - 1 >= 0:
+    #         adjacent_checks.append((self._board[y][x - 1] is None))
+    #     if x + 1 < len(self._board[y]):
+    #         adjacent_checks.append((self._board[y][x + 1] is None))
 
-        if all(adjacent_checks):
-            return False
+    #     if all(adjacent_checks):
+    #         return False
         
-        else:
-            self.board[row][col] = tile
-            reward[self.current_player_num] = 1
-            self.player_hands[self.current_player_num].remove(tile)
+    #     else:
+    #         self.board[row][col] = tile
+    #         reward[self.current_player_num] = 1
+    #         self.player_hands[self.current_player_num].remove(tile)
 
-            # handle game over
-            done = self.check_game_over()
-            if not done:
-                # Draw a new tile for the player
-                self.player_hands[self.current_player_num].append(self.draw_tiles(1))
+    #         # handle game over
+    #         done = self.check_game_over()
+    #         if not done:
+    #             # Draw a new tile for the player
+    #             self.player_hands[self.current_player_num].append(self.draw_tiles(1))
 
-        self.current_player_num = (self.current_player_num + 1) % 2
-        self.turns_taken += 1
+    #     self.current_player_num = (self.current_player_num + 1) % 2
+    #     self.turns_taken += 1
 
-        return self.observation, reward, done, {}
+    #     return self.observation, reward, done, {}
 
 
     # Dependent on how you define the board and how to reset this.
