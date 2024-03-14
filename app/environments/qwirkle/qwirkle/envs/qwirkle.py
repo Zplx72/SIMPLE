@@ -309,11 +309,10 @@ class QwirkleEnv(gym.Env):
     def check_game_over(self):
         # Check if the bag of tiles is empty
         if not self.bag_of_tiles:
-            # Check if any player has no tiles left
-            for player in self.players:
-                if not player.tiles:
-                    return True, player
-        return False, None
+            # Check if the current player has no tiles left
+            if not self._tiles:
+                return True
+        return False
 
     @property
     # Nothing need to be changed, probably
@@ -570,14 +569,22 @@ class QwirkleEnv(gym.Env):
             
             # The numerical has been done. 
             self.board[_row][col] = self.piece_to_float_converter(self._tiles[tile_index])
+
+            # Remove the tile from the bag
+            self._tiles.pop(tile_index)
+            
+            # Add a tile to the hand from the bag, WHAT IF? The bag_of_tiles is empty?
+            self.pick_tiles(self.bag_of_tiles)
             
             # figuring out some sort of a scoring system. 
             score = self.score()
-
             reward[self.current_player_num] = score
-        
+
+            # check if the game is over after the action
+            done = self.check_game_over()
+
         # I think if the game is done then the player changes to be the other one?
-        # what would that indicate though
+        # what would that indicate though: The other player is the same agent at different point in time. 
         self.done = done
 
         if not done:
