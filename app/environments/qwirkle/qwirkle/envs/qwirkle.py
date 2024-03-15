@@ -8,7 +8,7 @@ import numpy as np
 import random
 
 
-from stable_baselines import logger
+# from stable_baselines import logger
 
 # colours = ['red', 'orange', 'yellow', 'green', 'blue', 'purple']
 # shapes = ['circle', 'square', 'diamond', 'clover', 'star', 'cross']
@@ -77,11 +77,15 @@ class QwirkleEnv(gym.Env):
         # self.shapes = ['circle', 'square', 'diamond', 'clover', 'star', 'cross']
         self.n_tiles = 6
         self.n_players = 2
+        self.current_player_num = 1
 
         # Initialize the bag of tiles going through each color
         # Step 2 of conversion, _bag_of_tiles, has been implemented and changed
         self._bag_of_tiles = []
+        self._generate_new_bag_of_tiles()
+
         self._tiles = []
+        self.pick_tiles(self._bag_of_tiles )
         # print(len(self.bag_of_tiles))
 
         # Initialize the players' hands
@@ -334,6 +338,14 @@ class QwirkleEnv(gym.Env):
     ### They have taken the step, after they make a move you day if the move was good or bad.
     # self does contain the board. 
 
+    # For testing purposes.
+    def action_to_indices(self, action):
+        tile_index = action % self.n_tiles
+        two_d_index = action // self.n_tiles
+        col = two_d_index % self.grid_length
+        _row = two_d_index // self.grid_length
+        return tile_index, col, _row
+
     def score(self):
         """Return the score for the current turn"""
         if len(self._plays) == 0:
@@ -546,11 +558,7 @@ class QwirkleEnv(gym.Env):
         # you don't need tunrs_taken. 
         # consider normalising the reward. 
         reward = [0,0]
-
-        tile_index = action % self.n_tiles
-        two_d_index = action // self.n_tiles
-        col = two_d_index % self.grid_length
-        _row = two_d_index // self.grid_length
+        tile_index, col, _row = self.action_to_indices(action)
 
         # the three funcitons will be written down here, checks will be done and if it is true then the "_board" will be updated
         # Here is where the functions go. 
