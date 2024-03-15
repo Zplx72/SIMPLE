@@ -1,6 +1,6 @@
 import unittest
 from qwirkle import QwirkleEnv  
-
+import numpy as np
 class TestQwirkleEnv(unittest.TestCase):
     def setUp(self):
         self.game = QwirkleEnv()  # initialize your game
@@ -47,12 +47,16 @@ class TestQwirkleEnv(unittest.TestCase):
         two_d_index = valid_action // self.game.n_tiles
         col = two_d_index % self.game.grid_length
         _row = two_d_index // self.game.grid_length
-
+        does_flag_work =  self.game.flag_is_board_empty
+        self.assertEqual(does_flag_work, True)
         # Call the _is_play_valid method
-        is_valid = self.game._is_play_valid(piece=self.game._tiles[tile_index], x=col, y=_row)
+        # Set print options
+        np.set_printoptions(threshold=np.inf)
+        # self.game.function_is_board_empty()
+        self.game.step(valid_action)
 
         # Check that the method correctly identifies the play as valid
-        self.assertEqual(is_valid, True)
+        self.assertEqual(self.game.flag_is_board_empty, False)
 
     # def test_is_play_invalid(self):
     #     # assuming an invalid action

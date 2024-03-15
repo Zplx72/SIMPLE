@@ -100,7 +100,7 @@ class QwirkleEnv(gym.Env):
         # 12 has been gotten rid of as, the only thing on the board would be an integer mapped from the tile to the class. 
 
         # This board is purly numeric.
-        self.board = np.zeros((self.grid_length, self.grid_length), dtype=np.int32)
+        self.board = np.zeros((self.grid_length, self.grid_length), dtype=np.float32)
 
         # This board is aligned with what the other source code have. 
         self._board = [[None] * self.grid_length for i in range(self.grid_length)]
@@ -286,21 +286,21 @@ class QwirkleEnv(gym.Env):
     # if it is empty and if it is legal to place a tile there.
     @property
     def legal_actions(self):
-        legal_actions = np.zeros((self.grid_length, self.grid_length))
+        legal_actions = np.zeros((self.grid_length, self.grid_length), dtype=np.float32)
 
-        # Iterate over the cells on the board
-        for i in range(self.board.shape[0]):
-            for j in range(self.board.shape[1]):
-                # Check if the cell is empty
-                #if np.all(self.board[i, j] == np.eye(12)[0]):  # Assuming the first tile is the "empty" tile
-                if self.board[i, j].all(0):
-                    # Check if placing a tile in this cell would be a legal action
-                    # is_legal_action is a function that you need to write, 
-                    # it should return True if the action is legal and False otherwise
-                    if self.board[i+1, j].any(1) or self.board[i-1, j].any(1) or self.board[i, j+1].any(1) or self.board[i, j-1].any(1): 
-                        legal_actions[i, j] = 1
-                    # if self.is_legal_action(i, j):
-                    #     legal_actions[i, j] = 1
+        # # Iterate over the cells on the board
+        # for i in range(self.board.shape[0]):
+        #     for j in range(self.board.shape[1]):
+        #         # Check if the cell is empty
+        #         #if np.all(self.board[i, j] == np.eye(12)[0]):  # Assuming the first tile is the "empty" tile
+        #         if self.board[i, j].all(0):
+        #             # Check if placing a tile in this cell would be a legal action
+        #             # is_legal_action is a function that you need to write, 
+        #             # it should return True if the action is legal and False otherwise
+        #             if self.board[i+1, j].any(1) or self.board[i-1, j].any(1) or self.board[i, j+1].any(1) or self.board[i, j-1].any(1): 
+        #                 legal_actions[i, j] = 1
+        #             # if self.is_legal_action(i, j):
+        #             #     legal_actions[i, j] = 1
 
         return legal_actions
     # Start what you need and try to figure out how to do it. 
@@ -344,9 +344,13 @@ class QwirkleEnv(gym.Env):
     # For testing purposes.
 
     # Check if the board is empty or not
-    def fucntion_is_board_empty(self):
-        if np.all(self.board != 0):
+    def function_is_board_empty(self):
+        if np.all(self.board == float(0)):
+            self.flag_is_board_empty = True
+            print(f"The 'if' part of the board, flag is: {self.flag_is_board_empty}")            
+        else:
             self.flag_is_board_empty = False
+            print(f"The 'else' part of the board, flag is: {self.flag_is_board_empty}")  
         return self.flag_is_board_empty
 
 
@@ -579,20 +583,23 @@ class QwirkleEnv(gym.Env):
         
         # checks if the board is empty 
         if self.flag_is_board_empty:
-            # function is board empty runs to flip the flag
-            self.fucntion_is_board_empty()
-            
             # All the steps below are mirrored from the else statement.
             done = False
 
             # Board piece assignment.
             self._board[_row][col] = self._tiles[tile_index] 
             self.board[_row][col] = self.piece_to_float_converter(self._tiles[tile_index])
-
+            print(f"Floating converter: {self.piece_to_float_converter(self._tiles[tile_index])}")
+            print(self.board)
             # Popping the tile
             self._tiles.pop(tile_index)
-            self.pick_tiles(self._bag_of_tiles)            
-            
+            self.pick_tiles(self._bag_of_tiles)       
+
+            # function is board empty runs to flip the flag
+            self.function_is_board_empty()
+            # print(f"the flag: {self.flag_is_board_empty}")
+            # print(f"the all zero part {np.all(self.board != 0)}")
+
             # score, reward and done.
             score = self.score()
             reward[self.current_player_num] = score            
