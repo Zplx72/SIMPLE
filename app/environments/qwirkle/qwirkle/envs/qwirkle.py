@@ -85,7 +85,7 @@ class QwirkleEnv(gym.Env):
         self._generate_new_bag_of_tiles()
 
         self._tiles = []
-        self.pick_tiles(self._bag_of_tiles )
+        self.pick_tiles(self._bag_of_tiles)
         # print(len(self.bag_of_tiles))
 
         # Initialize the players' hands
@@ -104,6 +104,9 @@ class QwirkleEnv(gym.Env):
 
         # This board is aligned with what the other source code have. 
         self._board = [[None] * self.grid_length for i in range(self.grid_length)]
+
+        # have this flag just to change it to false later on after the first tile is put down
+        self.flag_is_board_empty = True
 
         # It is like a history of plays, in the game this can happen more than once in one round. 
         self._plays = []
@@ -312,7 +315,7 @@ class QwirkleEnv(gym.Env):
     # again qwirkle implementation would havve this
     def check_game_over(self):
         # Check if the bag of tiles is empty
-        if not self.bag_of_tiles:
+        if not self._bag_of_tiles:
             # Check if the current player has no tiles left
             if not self._tiles:
                 return True
@@ -339,6 +342,14 @@ class QwirkleEnv(gym.Env):
     # self does contain the board. 
 
     # For testing purposes.
+
+    # Check if the board is empty or not
+    def fucntion_is_board_empty(self):
+        if np.all(self.board != 0):
+            self.flag_is_board_empty = False
+        return self.flag_is_board_empty
+
+
     def action_to_indices(self, action):
         tile_index = action % self.n_tiles
         two_d_index = action // self.n_tiles
@@ -565,10 +576,33 @@ class QwirkleEnv(gym.Env):
 
         # you check if the play is valid. 
         bool_valid_play = self._is_play_valid(piece=self._tiles[tile_index], x = col, y = _row)
-        if not bool_valid_play:
+        
+        # checks if the board is empty 
+        if self.flag_is_board_empty:
+            # function is board empty runs to flip the flag
+            self.fucntion_is_board_empty()
+            
+            # All the steps below are mirrored from the else statement.
+            done = False
+
+            # Board piece assignment.
+            self._board[_row][col] = self._tiles[tile_index] 
+            self.board[_row][col] = self.piece_to_float_converter(self._tiles[tile_index])
+
+            # Popping the tile
+            self._tiles.pop(tile_index)
+            self.pick_tiles(self._bag_of_tiles)            
+            
+            # score, reward and done.
+            score = self.score()
+            reward[self.current_player_num] = score            
+            done = self.check_game_over()
+            
+        elif not bool_valid_play:
             done = True
             reward = [10, 10]
             reward[self.current_player_num] = -10
+        
         else:
             # Two things need to be done, updating both boards: _board and board. 
             done = False
@@ -582,7 +616,7 @@ class QwirkleEnv(gym.Env):
             self._tiles.pop(tile_index)
             
             # Add a tile to the hand from the bag, WHAT IF? The bag_of_tiles is empty?
-            self.pick_tiles(self.bag_of_tiles)
+            self.pick_tiles(self._bag_of_tiles)
             
             # figuring out some sort of a scoring system. 
             score = self.score()
