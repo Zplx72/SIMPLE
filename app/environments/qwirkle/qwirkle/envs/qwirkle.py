@@ -81,17 +81,17 @@ class QwirkleEnv(gym.Env):
         self.n_players = 2
         self.current_player_num = 1
 
-        # Initialize the bag of tiles going through each color
-        # Step 2 of conversion, _bag_of_tiles, has been implemented and changed
-        self._bag_of_tiles = []
-        self._generate_new_bag_of_tiles()
+        # # Initialize the bag of tiles going through each color
+        # # Step 2 of conversion, _bag_of_tiles, has been implemented and changed
+        # self._bag_of_tiles = []
+        # self._generate_new_bag_of_tiles()
 
-        self._tiles = []
-        self.pick_tiles(self._bag_of_tiles)
-        # print(len(self.bag_of_tiles))
+        # self._tiles = []
+        # self.pick_tiles(self._bag_of_tiles)
+        # # print(len(self.bag_of_tiles))
 
-        # Initialize the players' hands
-        # self.player_hands = [self.draw_tiles(self.n_tiles) for i in range(self.n_players)]
+        # # Initialize the players' hands
+        # # self.player_hands = [self.draw_tiles(self.n_tiles) for i in range(self.n_players)]
 
         # No need for all the grid stuff perhaps something similar.
         self.grid_length = 91
@@ -101,17 +101,17 @@ class QwirkleEnv(gym.Env):
         # Initialize the board
         # 12 has been gotten rid of as, the only thing on the board would be an integer mapped from the tile to the class. 
 
-        # This board is purly numeric.
-        self.board = np.zeros((self.grid_length, self.grid_length), dtype=np.float32)
+        # # This board is purly numeric.
+        # self.board = np.zeros((self.grid_length, self.grid_length), dtype=np.float32)
 
-        # This board is aligned with what the other source code have. 
-        self._board = [[None] * self.grid_length for i in range(self.grid_length)]
+        # # This board is aligned with what the other source code have. 
+        # self._board = [[None] * self.grid_length for i in range(self.grid_length)]
 
-        # have this flag just to change it to false later on after the first tile is put down
-        self.flag_is_board_empty = True
+        # # have this flag just to change it to false later on after the first tile is put down
+        # self.flag_is_board_empty = True
 
-        # It is like a history of plays, in the game this can happen more than once in one round. 
-        self._plays = []
+        # # It is like a history of plays, in the game this can happen more than once in one round. 
+        # self._plays = []
 
         #Most importatn one is the action space and observation space
         # The action space is the number of squares on the board, as you can place a token on any square
@@ -674,27 +674,56 @@ class QwirkleEnv(gym.Env):
 
 
 
-
-    # Dependent on how you define the board and how to reset this.
     def reset(self):
-        # self.board = [Token('.', 0)] * self.num_squares
-        # self.players = [Player('1', Token('X', 1)), Player('2', Token('O', -1))]
+        self.current_player_num = 1
 
         # Initialize the bag of tiles going through each color
-        self.bag_of_tiles = [(colour, shape) for colour in self.colours for shape in self.shapes for i in range(3)]
-        print(len(self.bag_of_tiles))
+        # Step 2 of conversion, _bag_of_tiles, has been implemented and changed
+        self._bag_of_tiles = []
+        self._generate_new_bag_of_tiles()
+
+        self._tiles = []
+        self.pick_tiles(self._bag_of_tiles)
+        # print(len(self.bag_of_tiles))
+
         # Initialize the players' hands
-        self.player_hands = [self.draw_tiles(self.n_tiles) for i in range(self.n_players)]
+        # self.player_hands = [self.draw_tiles(self.n_tiles) for i in range(self.n_players)]
+        # Initialize the board
+        # 12 has been gotten rid of as, the only thing on the board would be an integer mapped from the tile to the class. 
 
-        # Reset the board
-        self.board = np.zeros((self.grid_length, self.grid_length, 12), dtype=np.int32)
+        # This board is purly numeric.
+        self.board = np.zeros((self.grid_length, self.grid_length), dtype=np.float32)
 
-        # set current player
-        self.current_player_num = random.randint(0, 1)
-        self.turns_taken = 0
-        self.done = False
-        #logger.debug(f'\n\n---- NEW GAME ----')
+        # This board is aligned with what the other source code have. 
+        self._board = [[None] * self.grid_length for i in range(self.grid_length)]
+
+        # have this flag just to change it to false later on after the first tile is put down
+        self.flag_is_board_empty = True
+
+        # It is like a history of plays, in the game this can happen more than once in one round. 
+        self._plays = []
         return self.observation
+ 
+    # # Dependent on how you define the board and how to reset this.
+    # def reset(self):
+    #     # self.board = [Token('.', 0)] * self.num_squares
+    #     # self.players = [Player('1', Token('X', 1)), Player('2', Token('O', -1))]
+
+    #     # Initialize the bag of tiles going through each color
+    #     self.bag_of_tiles = [(colour, shape) for colour in self.colours for shape in self.shapes for i in range(3)]
+    #     print(len(self.bag_of_tiles))
+    #     # Initialize the players' hands
+    #     self.player_hands = [self.draw_tiles(self.n_tiles) for i in range(self.n_players)]
+
+    #     # Reset the board
+    #     self.board = np.zeros((self.grid_length, self.grid_length, 12), dtype=np.int32)
+
+    #     # set current player
+    #     self.current_player_num = random.randint(0, 1)
+    #     self.turns_taken = 0
+    #     self.done = False
+    #     #logger.debug(f'\n\n---- NEW GAME ----')
+    #     return self.observation
 
     # Map how it outputs the game on cml
     def render(self, mode='human', close=False, verbose = True):
