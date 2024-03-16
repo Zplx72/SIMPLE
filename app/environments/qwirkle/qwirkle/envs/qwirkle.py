@@ -44,6 +44,8 @@ class Piece:
         return self.__str__()
 
 
+# if you wanted to add a method that allows a player to swap tiles from their hand with tiles from the bag, it might make sense to add this method to a Player class.
+# However, if you later decide to add more complexity to your game (like more player-specific attributes or methods), you might want to consider using a `Player` class. For now, your current implementation is functional and appropriate for your game's requirements.
 
 class Player():
     def __init__(self, id):
@@ -275,10 +277,16 @@ class QwirkleEnv(gym.Env):
         
         # So you get the legal actions based on the board state
         # Compute the legal actions, 
-        legal_actions = self.legal_actions
+        # legal_actions = self.legal_actions
+    
+        # Change the _tiles to tile_state which will be at most a 6 element list, wiht float numbers encoded. 
+        tile_state = []
+        for i in self._tiles:
+            tile_state.append(self.piece_to_float_converter(i))
+        
 
         # Stack the board state and the legal actions along the last dimension
-        out = np.stack([board_state, legal_actions], axis=-1)
+        out = np.stack([board_state, tile_state], axis=-1)
 
         return out
 
@@ -287,7 +295,7 @@ class QwirkleEnv(gym.Env):
     @property
     def legal_actions(self):
         legal_actions = np.zeros((self.grid_length, self.grid_length), dtype=np.float32)
-
+        return legal_actions
         # # Iterate over the cells on the board
         # for i in range(self.board.shape[0]):
         #     for j in range(self.board.shape[1]):
@@ -302,15 +310,15 @@ class QwirkleEnv(gym.Env):
         #             # if self.is_legal_action(i, j):
         #             #     legal_actions[i, j] = 1
 
-        return legal_actions
+
     # Start what you need and try to figure out how to do it. 
 
     # def is_legal_action(self, row, col):
 
     # check where this is coming from. 
-    def square_is_player(self, square, player):
+    # def square_is_player(self, square, player):
         
-        return self.board[square].number == self.players[player].token.number
+    #     return self.board[square].number == self.players[player].token.number
 
     # again qwirkle implementation would havve this
     def check_game_over(self):
@@ -321,10 +329,10 @@ class QwirkleEnv(gym.Env):
                 return True
         return False
 
-    @property
-    # Nothing need to be changed, probably
-    def current_player(self):
-        return self.players[self.current_player_num]
+    # @property
+    # # Nothing need to be changed, probably
+    # def current_player(self):
+    #     return self.players[self.current_player_num]
 
     # This is interesting part for reward function. You may need functions from qwirkle implementation. No set answer how the reward funtion would work
     # Easy mode assume the reward funtion doesknow everyone's state eventhough imperfect information.
@@ -589,8 +597,8 @@ class QwirkleEnv(gym.Env):
             # Board piece assignment.
             self._board[_row][col] = self._tiles[tile_index] 
             self.board[_row][col] = self.piece_to_float_converter(self._tiles[tile_index])
-            print(f"Floating converter: {self.piece_to_float_converter(self._tiles[tile_index])}")
-            print(self.board)
+            # print(f"Floating converter: {self.piece_to_float_converter(self._tiles[tile_index])}")
+            # print(self.board)
             # Popping the tile
             self._tiles.pop(tile_index)
             self.pick_tiles(self._bag_of_tiles)       
@@ -643,90 +651,6 @@ class QwirkleEnv(gym.Env):
         return self.observation, reward, done, {}
 
 
-    # def step(self, action):
-    #     # once it took an action what would you do with that just say if it is a good idea or not. 
-    #     # you don't need tunrs_taken. 
-    #     # consider normalising the reward. 
-    #     reward = [0,0]
-
-    #     # Meeting 4: Don't take the location.As it is a bad idea.
-    #     # col = action % self.grid_length
-    #     # row = action // self.grid_length
-    #     # tile = action[1]
-    #     # you need to test the following. 
-    #     tile = action % self.n_tiles
-    #     two_d_index = action // self.n_tiles
-    #     col = two_d_index % self.grid_length
-    #     row = two_d_index // self.grid_length
-
-    #     # I need to update the state of the game , the board, remove the tile from the hand
-
-    #     # maximum point can be counted as 432.
-    #     #board = self.board
-    #     # check illegal action
-    #             # Make sure the placement is not on a corner and is inside the board
-    #     if col < 0 or col >= len(self.grid_length):
-    #         done = True
-    #         reward = [1, 1]
-    #         reward[self.current_player_num] = -1
-    #     if row < 0 or row >= len(self.grid_length):
-    #         done = True
-    #         reward = [1, 1]
-    #         reward[self.current_player_num] = -1            
-    #     if col == 0 and row == 0:
-    #         done = True
-    #         reward = [1, 1]
-    #         reward[self.current_player_num] = -1
-    #     if col == 0 and row == len(self.grid_length) - 1:
-    #         done = True
-    #         reward = [1, 1]
-    #         reward[self.current_player_num] = -1
-    #     if col == len(self.grid_length) - 1 and row == len(self.grid_length) - 1:
-    #         done = True
-    #         reward = [1, 1]
-    #         reward[self.current_player_num] = -1
-    #     if col == len(self.grid_length) - 1 and row == 0:
-    #         done = True
-    #         reward = [1, 1]
-    #         reward[self.current_player_num] = -1
-
-    #     if (self.board[row][col].any(1)):
-    #         done = True
-    #         reward = [1, 1]
-    #         reward[self.current_player_num] = -1
-    #     # check if player can make a move, pass otherwise
-    #     # place all the tiles you can in one step.
-    #         # a while loop to place as many tiles as possible.
-
-    #     # Make sure the placement has at least one adjacent placement
-    #     adjacent_checks = []
-    #     if y - 1 >= 0:
-    #         adjacent_checks.append((self._board[y - 1][x] is None))
-    #     if y + 1 < len(self._board):
-    #         adjacent_checks.append((self._board[y + 1][x] is None))
-    #     if x - 1 >= 0:
-    #         adjacent_checks.append((self._board[y][x - 1] is None))
-    #     if x + 1 < len(self._board[y]):
-    #         adjacent_checks.append((self._board[y][x + 1] is None))
-
-    #     if all(adjacent_checks):
-    #         return False
-        
-    #     else:
-    #         self.board[row][col] = tile
-    #         reward[self.current_player_num] = 1
-    #         self.player_hands[self.current_player_num].remove(tile)
-
-    #         # handle game over
-    #         done = self.check_game_over()
-    #         if not done:
-    #             # Draw a new tile for the player
-    #             self.player_hands[self.current_player_num].append(self.draw_tiles(1))
-
-    #     self.current_player_num = (self.current_player_num + 1) % 2
-    #     self.turns_taken += 1
-
-    #     return self.observation, reward, done, {}
 
 
     # Dependent on how you define the board and how to reset this.
