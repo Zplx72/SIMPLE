@@ -100,5 +100,13 @@ class TestQwirkleEnv(unittest.TestCase):
 
         # Check that the game over status is correct
         self.assertEqual(done, self.game.check_game_over())
+
+
+# Observation space tested.
+    def test_observation(self):
+        obs = self.game.observation
+        self.assertIsInstance(obs, np.ndarray)
+        self.assertEqual(obs.shape, self.game.observation_space.shape)
+
 if __name__ == '__main__':
     unittest.main()

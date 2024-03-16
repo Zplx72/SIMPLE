@@ -131,12 +131,15 @@ class QwirkleEnv(gym.Env):
         # defines the structure of the observations that the environment provides to the agent.
         # NEW: you need to observe the hand as well
         # NEW: put what the algorithm does as a flowchart. 
-        self.observation_space = gym.spaces.Tuple((
-            # step 4: observation space is modified, to encode each tile to be an float between -1 and 1.
-            # Question: is there a significance in if the box value is negative or postive????
-            gym.spaces.Box(low=-1, high=1, shape=(self.n_tiles,), dtype=np.float32),  # Player's hand
-            gym.spaces.Box(low=-1, high=1, shape=(self.grid_length, self.grid_length), dtype=np.float32)  # Board
-        ))     
+        # self.observation_space = gym.spaces.Tuple((
+        #     # step 4: observation space is modified, to encode each tile to be an float between -1 and 1.
+        #     # Question: is there a significance in if the box value is negative or postive????
+        #     gym.spaces.Box(low=-1, high=1, shape=(self.n_tiles,), dtype=np.float32),  # Player's hand
+        #     gym.spaces.Box(low=-1, high=1, shape=(self.grid_length, self.grid_length), dtype=np.float32)  # Board
+        # ))     
+        # Instead of an observation space that is a tuple. I added a Box that concatinates the board and the tiles on one dimension. 
+        ### ONE VERY BIG PROBLEM, What happens if the tiles are not 6? Should I just add zero to the end of it?
+        self.observation_space = gym.spaces.Box(low=-1, high=1, shape=((self.grid_length * self.grid_length) + self.n_tiles,), dtype=np.float32)
         self.verbose = verbose
 
     # Anything that part of the RL game is not part of the qwirkle implementation. Like reward, action, 
@@ -270,25 +273,44 @@ class QwirkleEnv(gym.Env):
     #     return out
 
     # This is different that observation in init. this runs every round but init runs only once. PS, very useful comment.
+    
+    # Original one
+    # @property
+    # def observation(self):
+    #     # Get the state of the board
+    #     board_state = self.board
+        
+    #     # So you get the legal actions based on the board state
+    #     # Compute the legal actions, 
+    #     # legal_actions = self.legal_actions
+    
+    #     # Change the _tiles to tile_state which will be at most a 6 element list, wiht float numbers encoded. 
+    #     tile_state = []
+    #     for i in self._tiles:
+    #         tile_state.append(self.piece_to_float_converter(i))
+        
+
+    #     # Stack the board state and the legal actions along the last dimension
+    #     out = np.stack([board_state, tile_state], axis=-1)
+
+    #     return out
+    
     @property
     def observation(self):
         # Get the state of the board
-        board_state = self.board
-        
-        # So you get the legal actions based on the board state
-        # Compute the legal actions, 
-        # legal_actions = self.legal_actions
-    
-        # Change the _tiles to tile_state which will be at most a 6 element list, wiht float numbers encoded. 
+        board_state = self.board.flatten()
+
+        # Change the _tiles to tile_state which will be at most a 6 element list, with float numbers encoded. 
         tile_state = []
         for i in self._tiles:
             tile_state.append(self.piece_to_float_converter(i))
-        
+        tile_state = np.array(tile_state).flatten()
 
-        # Stack the board state and the legal actions along the last dimension
-        out = np.stack([board_state, tile_state], axis=-1)
+        # Concatenate the board state and the tile state to create a single 1D array
+        out = np.concatenate([board_state, tile_state])
 
         return out
+    
 
     # Legal actions here goes through every cell on the board and check
     # if it is empty and if it is legal to place a tile there.
