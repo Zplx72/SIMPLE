@@ -6,9 +6,10 @@ from random import Random
 import gym
 import numpy as np
 import random
+from termcolor import colored
 
 
-# from stable_baselines import logger
+from stable_baselines import logger
 
 # colours = ['red', 'orange', 'yellow', 'green', 'blue', 'purple']
 # shapes = ['circle', 'square', 'diamond', 'clover', 'star', 'cross']
@@ -377,10 +378,10 @@ class QwirkleEnv(gym.Env):
     def function_is_board_empty(self):
         if np.all(self.board == float(0)):
             self.flag_is_board_empty = True
-            print(f"The 'if' part of the board, flag is: {self.flag_is_board_empty}")            
+            # print(f"The 'if' part of the board, flag is: {self.flag_is_board_empty}")            
         else:
             self.flag_is_board_empty = False
-            print(f"The 'else' part of the board, flag is: {self.flag_is_board_empty}")  
+            # print(f"The 'else' part of the board, flag is: {self.flag_is_board_empty}")  
         return self.flag_is_board_empty
 
 
@@ -614,7 +615,7 @@ class QwirkleEnv(gym.Env):
         # checks if the board is empty 
         if self.flag_is_board_empty:
             # All the steps below are mirrored from the else statement.
-            done = False
+            self.done = False
 
             # Board piece assignment.
             self._board[_row][col] = self._tiles[tile_index] 
@@ -633,16 +634,16 @@ class QwirkleEnv(gym.Env):
             # score, reward and done.
             score = self.score()
             reward[self.current_player_num] = score            
-            done = self.check_game_over()
+            self.done = self.check_game_over()
             
         elif not bool_valid_play:
-            done = True
+            self.done = True
             reward = [10, 10]
             reward[self.current_player_num] = -10
         
         else:
             # Two things need to be done, updating both boards: _board and board. 
-            done = False
+            self.done = False
             # The None, and tile_index is done. 
             self._board[_row][col] = self._tiles[tile_index]
             
@@ -660,22 +661,23 @@ class QwirkleEnv(gym.Env):
             reward[self.current_player_num] = score
 
             # check if the game is over after the action
-            done = self.check_game_over()
+            self.done = self.check_game_over()
 
         # I think if the game is done then the player changes to be the other one?
         # what would that indicate though: The other player is the same agent at different point in time. 
-        self.done = done
+        
 
-        if not done:
+        if not self.done:
             self.current_player_num = (self.current_player_num + 1) % 2
 
         
-        return self.observation, reward, done, {}
+        return self.observation, reward, self.done, {}
 
 
 
     def reset(self):
         self.current_player_num = 1
+        self.done = False
 
         # Initialize the bag of tiles going through each color
         # Step 2 of conversion, _bag_of_tiles, has been implemented and changed
@@ -726,6 +728,39 @@ class QwirkleEnv(gym.Env):
     #     return self.observation
 
     # Map how it outputs the game on cml
+
+    def print_board(self, show_valid_placements=True):
+        if len(self._board) == 0:
+            print('  A')
+            print('01', colored('■', 'white'))
+            return
+
+        valid_plays = self.valid_plays()
+        lines = []
+        for y in range(len(self._board)):
+            line = ''
+            for x in range(len(self._board[y])):
+                if self._board[y][x] is not None:
+                    if (x, y) in self._last_plays:
+                        line += colored(self._board[y][x].shape + ' ', self._board[y][x].color, 'on_white')
+                    else:
+                        line += colored(self._board[y][x].shape + ' ', self._board[y][x].color)
+                elif (x, y) in valid_plays and show_valid_placements:
+                    line += colored('☐', 'white') + ' '
+                else:
+                    line += '  '
+
+            lines.append(line)
+
+        # add in the top coord line
+        line = ''.join([chr(65 + i) + ' ' for i in range(len(self._board[0]))])
+        lines.insert(0, line)
+        lines.append(line)
+
+        for i in range(0, len(lines)):
+            i_display = str(i).zfill(2) if 0 < i < len(lines) - 1 else '  '
+            print(i_display, lines[i], i_display)
+    ### HERE TO UNCOMMENT
     def render(self, mode='human', close=False, verbose = True):
         logger.debug('')
         if close:
@@ -733,116 +768,116 @@ class QwirkleEnv(gym.Env):
         if self.done:
             logger.debug(f'GAME OVER')
         else:
-            logger.debug(f"It is Player {self.current_player.id}'s turn to move")
+            logger.debug(f"It is Player {self.current_player_num}'s turn to move")
             
-        logger.debug(' '.join([x.symbol for x in self.board[:self.grid_length]]))
-        logger.debug(' '.join([x.symbol for x in self.board[self.grid_length:self.grid_length*2]]))
-        logger.debug(' '.join([x.symbol for x in self.board[(self.grid_length*2):(self.grid_length*3)]]))
+        # logger.debug(' '.join([x.symbol for x in self.board[:self.grid_length]]))
+        # logger.debug(' '.join([x.symbol for x in self.board[self.grid_length:self.grid_length*2]]))
+        # logger.debug(' '.join([x.symbol for x in self.board[(self.grid_length*2):(self.grid_length*3)]]))
 
-        if self.verbose:
-            logger.debug(f'\nObservation: \n{self.observation}')
+        # if self.verbose:
+        #     logger.debug(f'\nObservation: \n{self.observation}')
         
-        if not self.done:
-            logger.debug(f'\nLegal actions: {[i for i,o in enumerate(self.legal_actions) if o != 0]}')
+        # if not self.done:
+        #     logger.debug(f'\nLegal actions: {[i for i,o in enumerate(self.legal_actions) if o != 0]}')
 
     # This is to make a move. Given a certain state of the board what are you doing next.
     # Also log to report the what is happening
-    def rules_move(self):
-        if self.current_player.token.number == 1:
-            b = [x.number for x in self.board]
-        else:
-            b = [-x.number for x in self.board]
+#     def rules_move(self):
+#         if self.current_player.token.number == 1:
+#             b = [x.number for x in self.board]
+#         else:
+#             b = [-x.number for x in self.board]
 
-        # Check computer win moves
-        for i in range(0, self.num_squares):
-            if b[i] == 0 and testWinMove(b, 1, i):
-                logger.debug('Winning move')
-                return self.create_action_probs(i)
-        # Check player win moves
-        for i in range(0, self.num_squares):
-            if b[i] == 0 and testWinMove(b, -1, i):
-                logger.debug('Block move')
-                return self.create_action_probs(i)
-        # Check computer fork opportunities
-        for i in range(0, self.num_squares):
-            if b[i] == 0 and testForkMove(b, 1, i):
-                logger.debug('Create Fork')
-                return self.create_action_probs(i)
-        # Check player fork opportunities, incl. two forks
-        playerForks = 0
-        for i in range(0, self.num_squares):
-            if b[i] == 0 and testForkMove(b, -1, i):
-                playerForks += 1
-                tempMove = i
-        if playerForks == 1:
-            logger.debug('Block One Fork')
-            return self.create_action_probs(tempMove)
-        elif playerForks == 2:
-            for j in [1, 3, 5, 7]:
-                if b[j] == 0:
-                    logger.debug('Block 2 Forks')
-                    return self.create_action_probs(j)
-        # Play center
-        if b[4] == 0:
-            logger.debug('Play Centre')
-            return self.create_action_probs(4)
-        # Play a corner
-        for i in [0, 2, 6, 8]:
-            if b[i] == 0:
-                logger.debug('Play Corner')
-                return self.create_action_probs(i)
-        #Play a side
-        for i in [1, 3, 5, 7]:
-            if b[i] == 0:
-                logger.debug('Play Side')
-                return self.create_action_probs(i)
-
-
-    def create_action_probs(self, action):
-        action_probs = [0.01] * self.action_space.n
-        action_probs[action] = 0.92
-        return action_probs   
-
-# helper funciton for isgame over. Check if it is being used from the outside. Just check that if it is NOT called model.py.
-def checkWin(b, m):
-    return ((b[0] == m and b[1] == m and b[2] == m) or  # H top
-            (b[3] == m and b[4] == m and b[5] == m) or  # H mid
-            (b[6] == m and b[7] == m and b[8] == m) or  # H bot
-            (b[0] == m and b[3] == m and b[6] == m) or  # V left
-            (b[1] == m and b[4] == m and b[7] == m) or  # V centre
-            (b[2] == m and b[5] == m and b[8] == m) or  # V right
-            (b[0] == m and b[4] == m and b[8] == m) or  # LR diag
-            (b[2] == m and b[4] == m and b[6] == m))  # RL diag
+#         # Check computer win moves
+#         for i in range(0, self.num_squares):
+#             if b[i] == 0 and testWinMove(b, 1, i):
+#                 logger.debug('Winning move')
+#                 return self.create_action_probs(i)
+#         # Check player win moves
+#         for i in range(0, self.num_squares):
+#             if b[i] == 0 and testWinMove(b, -1, i):
+#                 logger.debug('Block move')
+#                 return self.create_action_probs(i)
+#         # Check computer fork opportunities
+#         for i in range(0, self.num_squares):
+#             if b[i] == 0 and testForkMove(b, 1, i):
+#                 logger.debug('Create Fork')
+#                 return self.create_action_probs(i)
+#         # Check player fork opportunities, incl. two forks
+#         playerForks = 0
+#         for i in range(0, self.num_squares):
+#             if b[i] == 0 and testForkMove(b, -1, i):
+#                 playerForks += 1
+#                 tempMove = i
+#         if playerForks == 1:
+#             logger.debug('Block One Fork')
+#             return self.create_action_probs(tempMove)
+#         elif playerForks == 2:
+#             for j in [1, 3, 5, 7]:
+#                 if b[j] == 0:
+#                     logger.debug('Block 2 Forks')
+#                     return self.create_action_probs(j)
+#         # Play center
+#         if b[4] == 0:
+#             logger.debug('Play Centre')
+#             return self.create_action_probs(4)
+#         # Play a corner
+#         for i in [0, 2, 6, 8]:
+#             if b[i] == 0:
+#                 logger.debug('Play Corner')
+#                 return self.create_action_probs(i)
+#         #Play a side
+#         for i in [1, 3, 5, 7]:
+#             if b[i] == 0:
+#                 logger.debug('Play Side')
+#                 return self.create_action_probs(i)
 
 
-def checkDraw(b):
-    return 0 not in b
+#     def create_action_probs(self, action):
+#         action_probs = [0.01] * self.action_space.n
+#         action_probs[action] = 0.92
+#         return action_probs   
 
-# again a helper funciton. probably something similar but the board is different
-def getBoardCopy(b):
-    # Make a duplicate of the board. When testing moves we don't want to 
-    # change the actual board
-    dupeBoard = []
-    for j in b:
-        dupeBoard.append(j)
-    return dupeBoard
-
-# test functions, what does it test. need to write your own test.
-def testWinMove(b, mark, i):
-    # b = the board
-    # mark = 0 or X
-    # i = the square to check if makes a win 
-    bCopy = getBoardCopy(b)
-    bCopy[i] = mark
-    return checkWin(bCopy, mark)
+# # helper funciton for isgame over. Check if it is being used from the outside. Just check that if it is NOT called model.py.
+# def checkWin(b, m):
+#     return ((b[0] == m and b[1] == m and b[2] == m) or  # H top
+#             (b[3] == m and b[4] == m and b[5] == m) or  # H mid
+#             (b[6] == m and b[7] == m and b[8] == m) or  # H bot
+#             (b[0] == m and b[3] == m and b[6] == m) or  # V left
+#             (b[1] == m and b[4] == m and b[7] == m) or  # V centre
+#             (b[2] == m and b[5] == m and b[8] == m) or  # V right
+#             (b[0] == m and b[4] == m and b[8] == m) or  # LR diag
+#             (b[2] == m and b[4] == m and b[6] == m))  # RL diag
 
 
-def testForkMove(b, mark, i):
+# def checkDraw(b):
+#     return 0 not in b
+
+# # again a helper funciton. probably something similar but the board is different
+# def getBoardCopy(b):
+#     # Make a duplicate of the board. When testing moves we don't want to 
+#     # change the actual board
+#     dupeBoard = []
+#     for j in b:
+#         dupeBoard.append(j)
+#     return dupeBoard
+
+# # test functions, what does it test. need to write your own test.
+# def testWinMove(b, mark, i):
+#     # b = the board
+#     # mark = 0 or X
+#     # i = the square to check if makes a win 
+#     bCopy = getBoardCopy(b)
+#     bCopy[i] = mark
+#     return checkWin(bCopy, mark)
+
+
+# def testForkMove(b, mark, i):
     # Determines if a move opens up a fork
-    bCopy = getBoardCopy(b)
-    bCopy[i] = mark
-    winningMoves = 0
-    for j in range(0, 9):
-        if testWinMove(bCopy, mark, j) and bCopy[j] == 0:
-            winningMoves += 1
-    return winningMoves >= 2
+    # bCopy = getBoardCopy(b)
+    # bCopy[i] = mark
+    # winningMoves = 0
+    # for j in range(0, 9):
+    #     if testWinMove(bCopy, mark, j) and bCopy[j] == 0:
+    #         winningMoves += 1
+    # return winningMoves >= 2

@@ -15,7 +15,8 @@ class CustomPolicy(ActorCriticPolicy):
         super(CustomPolicy, self).__init__(sess, ob_space, ac_space, n_env, n_steps, n_batch, reuse=reuse, scale=True)
 
         with tf.variable_scope("model", reuse=reuse):
-            
+            # Reshape the observation to be 2D (batch_size, features)
+            # obs = tf.reshape(self.processed_obs, [-1, ob_space.shape[0]])
             extracted_features = resnet_extractor(self.processed_obs, **kwargs)
             self._policy = policy_head(extracted_features)
             self._value_fn, self.q_value = value_head(extracted_features)
@@ -46,16 +47,22 @@ def value_head(y):
     y = convolutional(y, 4, 1)
     y = Flatten()(y)
     vf = dense(y, 1, batch_norm = False, activation = 'tanh', name='vf')
-    q = dense(y, 9, batch_norm = False, activation = 'tanh', name='q')
+    q = dense(y, 91*91*6, batch_norm = False, activation = 'tanh', name='q')
     return vf, q
 
 
 def policy_head(y):
     y = convolutional(y, 4, 1)
     y = Flatten()(y)
-    policy = dense(y, 9, batch_norm = False, activation = None, name='pi')
+    policy = dense(y, 91*91*6, batch_norm = False, activation = None, name='pi')
     return policy
 
+
+
+# def resnet_extractor(y, **kwargs):
+#     y = dense(y, 32)
+#     y = residual(y, 32)
+#     return y
 
 def resnet_extractor(y, **kwargs):
 
@@ -66,20 +73,50 @@ def resnet_extractor(y, **kwargs):
 
 
 
+# def convolutional(y, filters, kernel_size):
+#     y = Conv2D(filters, kernel_size=kernel_size, strides=1, padding='same')(y)
+#     y = BatchNormalization(momentum = 0.9)(y)
+#     y = Activation('relu')(y)
+#     return y
+
 def convolutional(y, filters, kernel_size):
-    y = Conv2D(filters, kernel_size=kernel_size, strides=1, padding='same')(y)
+    y = Dense(filters)(y)
     y = BatchNormalization(momentum = 0.9)(y)
     y = Activation('relu')(y)
     return y
 
+
+
+# def residual(y, filters):
+#     shortcut = y
+#     y = dense(y, filters)
+#     y = dense(y, filters)
+#     y = Add()([shortcut, y])
+#     y = Activation('relu')(y)
+#     return y
+# def residual(y, filters, kernel_size):
+#     shortcut = y
+
+#     y = Conv2D(filters, kernel_size=kernel_size, strides=1, padding='same')(y)
+#     y = BatchNormalization(momentum = 0.9)(y)
+#     y = Activation('relu')(y)
+
+#     y = Conv2D(filters, kernel_size=kernel_size, strides=1, padding='same')(y)
+#     y = BatchNormalization(momentum = 0.9)(y)
+#     y = Add()([shortcut, y])
+#     y = Activation('relu')(y)
+
+#     return y
+
+
 def residual(y, filters, kernel_size):
     shortcut = y
 
-    y = Conv2D(filters, kernel_size=kernel_size, strides=1, padding='same')(y)
+    y = Dense(filters)(y)
     y = BatchNormalization(momentum = 0.9)(y)
     y = Activation('relu')(y)
 
-    y = Conv2D(filters, kernel_size=kernel_size, strides=1, padding='same')(y)
+    y = Dense(filters)(y)
     y = BatchNormalization(momentum = 0.9)(y)
     y = Add()([shortcut, y])
     y = Activation('relu')(y)
