@@ -735,39 +735,73 @@ class QwirkleEnv(gym.Env):
 
     # Map how it outputs the game on cml
 
-    def print_board(self, show_valid_placements=False):
-        if len(self._board) == 0:
-            print('  A')
-            print('01', colored('■', 'white'))
-            return
+    # def print_board(self, show_valid_placements=False):
+    #     if len(self._plays) == 0:
+    #         print('The board is empty.')
+    #         return
 
-        # valid_plays = self.valid_plays()
+    #     # valid_plays = self.valid_plays()
+    #     lines = []
+    #     for y in range(len(self._board)):
+    #         line = ''
+    #         for x in range(len(self._board[y])):
+    #             if self._board[y][x] is not None:
+    #                 if (x, y) in self._plays:
+    #                     line += colored(self._board[y][x].shape + ' ', self._board[y][x].color, 'on_white')
+    #                 else:
+    #                     line += colored(self._board[y][x].shape + ' ', self._board[y][x].color)
+    #             # elif (x, y) in valid_plays and show_valid_placements:
+    #             #     line += colored('☐', 'white') + ' '
+    #             else:
+    #                 line += '  '
+
+    #         lines.append(line)
+
+    #     # add in the top coord line
+    #     line = ''.join([chr(65 + i) + ' ' for i in range(len(self._board[0]))])
+    #     lines.insert(0, line)
+    #     lines.append(line)
+
+    #     for i in range(0, len(lines)):
+    #         i_display = str(i).zfill(2) if 0 < i < len(lines) - 1 else '  '
+    #         print(i_display, lines[i], i_display)
+
+    def print_board_altered(self, show_valid_placements=False, radius=10):
+        if len(self._plays) == 0:
+            print('The board is empty.')
+            # return
+
+        # Get the coordinates of the last played tile
+        last_play = self._plays[-1] if self._plays else (0, 0)
+
+        # Calculate the range of cells to print
+        x_start = max(0, last_play[0] - radius)
+        x_end = min(len(self._board[0]), last_play[0] + radius)
+        y_start = max(0, last_play[1] - radius)
+        y_end = min(len(self._board), last_play[1] + radius)
+
         lines = []
-        for y in range(len(self._board)):
+        for y in range(y_start, y_end):
             line = ''
-            for x in range(len(self._board[y])):
+            for x in range(x_start, x_end):
                 if self._board[y][x] is not None:
                     if (x, y) in self._plays:
                         line += colored(self._board[y][x].shape + ' ', self._board[y][x].color, 'on_white')
                     else:
                         line += colored(self._board[y][x].shape + ' ', self._board[y][x].color)
-                # elif (x, y) in valid_plays and show_valid_placements:
-                #     line += colored('☐', 'white') + ' '
                 else:
                     line += '  '
-
             lines.append(line)
 
         # add in the top coord line
-        line = ''.join([chr(65 + i) + ' ' for i in range(len(self._board[0]))])
+        line = ''.join([chr(65 + i) + ' ' for i in range(x_start, x_end)])
         lines.insert(0, line)
         lines.append(line)
 
         for i in range(0, len(lines)):
-            i_display = str(i).zfill(2) if 0 < i < len(lines) - 1 else '  '
+            i_display = str(i + y_start).zfill(2) if 0 < i < len(lines) - 1 else '  '
             print(i_display, lines[i], i_display)
 
-    
 
     ### HERE TO UNCOMMENT
     def render(self, mode='human', close=False, verbose = True):
@@ -778,7 +812,7 @@ class QwirkleEnv(gym.Env):
             logger.debug(f'GAME OVER')
         else:
             logger.debug(f"It is Player {self.current_player_num}'s turn to move")
-        self.print_board()
+        self.print_board_altered()
             
         # logger.debug(' '.join([x.symbol for x in self.board[:self.grid_length]]))
         # logger.debug(' '.join([x.symbol for x in self.board[self.grid_length:self.grid_length*2]]))
