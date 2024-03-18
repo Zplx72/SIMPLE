@@ -25,12 +25,18 @@ class COLORS:
 
 
 class SHAPES:
-    TRIANGLE = 'triangle'
-    DIAMOND = 'diamond'
-    SQUARE = 'square'
-    CIRCLE = 'circle'
-    STAR = 'star'
-    SPARKLE = 'sparkle'
+    # TRIANGLE = 'triangle'
+    # DIAMOND = 'diamond'
+    # SQUARE = 'square'
+    # CIRCLE = 'circle'
+    # STAR = 'star'
+    # SPARKLE = 'sparkle'
+    TRIANGLE = '▲'
+    DIAMOND = '◆'
+    SQUARE = '■'
+    CIRCLE = '●'
+    STAR = '★'
+    SPARKLE = '❈'
 
 
 class Piece:
@@ -729,24 +735,24 @@ class QwirkleEnv(gym.Env):
 
     # Map how it outputs the game on cml
 
-    def print_board(self, show_valid_placements=True):
+    def print_board(self, show_valid_placements=False):
         if len(self._board) == 0:
             print('  A')
             print('01', colored('■', 'white'))
             return
 
-        valid_plays = self.valid_plays()
+        # valid_plays = self.valid_plays()
         lines = []
         for y in range(len(self._board)):
             line = ''
             for x in range(len(self._board[y])):
                 if self._board[y][x] is not None:
-                    if (x, y) in self._last_plays:
+                    if (x, y) in self._plays:
                         line += colored(self._board[y][x].shape + ' ', self._board[y][x].color, 'on_white')
                     else:
                         line += colored(self._board[y][x].shape + ' ', self._board[y][x].color)
-                elif (x, y) in valid_plays and show_valid_placements:
-                    line += colored('☐', 'white') + ' '
+                # elif (x, y) in valid_plays and show_valid_placements:
+                #     line += colored('☐', 'white') + ' '
                 else:
                     line += '  '
 
@@ -760,6 +766,9 @@ class QwirkleEnv(gym.Env):
         for i in range(0, len(lines)):
             i_display = str(i).zfill(2) if 0 < i < len(lines) - 1 else '  '
             print(i_display, lines[i], i_display)
+
+    
+
     ### HERE TO UNCOMMENT
     def render(self, mode='human', close=False, verbose = True):
         logger.debug('')
@@ -769,6 +778,7 @@ class QwirkleEnv(gym.Env):
             logger.debug(f'GAME OVER')
         else:
             logger.debug(f"It is Player {self.current_player_num}'s turn to move")
+        self.print_board()
             
         # logger.debug(' '.join([x.symbol for x in self.board[:self.grid_length]]))
         # logger.debug(' '.join([x.symbol for x in self.board[self.grid_length:self.grid_length*2]]))
