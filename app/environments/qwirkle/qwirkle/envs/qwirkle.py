@@ -626,6 +626,7 @@ class QwirkleEnv(gym.Env):
             # Board piece assignment.
             self._board[_row][col] = self._tiles[tile_index] 
             self.board[_row][col] = self.piece_to_float_converter(self._tiles[tile_index])
+            self._plays.append((col, _row))
             # print(f"Floating converter: {self.piece_to_float_converter(self._tiles[tile_index])}")
             # print(self.board)
             # Popping the tile
@@ -766,10 +767,10 @@ class QwirkleEnv(gym.Env):
     #         i_display = str(i).zfill(2) if 0 < i < len(lines) - 1 else '  '
     #         print(i_display, lines[i], i_display)
 
-    def print_board_altered(self, show_valid_placements=False, radius=10):
+    def print_board_altered(self, show_valid_placements=False, radius=5):
         if len(self._plays) == 0:
             print('The board is empty.')
-            # return
+            return
 
         # Get the coordinates of the last played tile
         last_play = self._plays[-1] if self._plays else (0, 0)
@@ -801,7 +802,7 @@ class QwirkleEnv(gym.Env):
         for i in range(0, len(lines)):
             i_display = str(i + y_start).zfill(2) if 0 < i < len(lines) - 1 else '  '
             print(i_display, lines[i], i_display)
-
+        print(f"self._plays: {self._plays}")
 
     ### HERE TO UNCOMMENT
     def render(self, mode='human', close=False, verbose = True):
