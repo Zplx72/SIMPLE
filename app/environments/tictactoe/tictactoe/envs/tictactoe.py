@@ -27,6 +27,7 @@ class TicTacToeEnv(gym.Env):
 
     def __init__(self, verbose = False, manual = False):
         super(TicTacToeEnv, self).__init__()
+        # print("__init__: begining")
         self.name = 'tictactoe'
         self.manual = manual
         
@@ -37,10 +38,12 @@ class TicTacToeEnv(gym.Env):
         self.action_space = gym.spaces.Discrete(self.num_squares)
         self.observation_space = gym.spaces.Box(-1, 1, self.grid_shape+(2,))
         self.verbose = verbose
+        # print("__init__: end\n")
         
 
     @property
     def observation(self):
+        # print("observation: start")
         if self.players[self.current_player_num].token.number == 1:
             position = np.array([x.number for x in self.board]).reshape(self.grid_shape)
         else:
@@ -48,16 +51,19 @@ class TicTacToeEnv(gym.Env):
 
         la_grid = np.array(self.legal_actions).reshape(self.grid_shape)
         out = np.stack([position,la_grid], axis = -1)
+        # print("observation: end\n")
         return out
 
     @property
     def legal_actions(self):
+        # print("legal_actions: start")
         legal_actions = []
         for action_num in range(len(self.board)):
             if self.board[action_num].number==0: #empty square
                 legal_actions.append(1)
             else:
                 legal_actions.append(0)
+        # print("legal_actions: end")
         return np.array(legal_actions)
 
 
@@ -97,6 +103,7 @@ class TicTacToeEnv(gym.Env):
 
 
     def step(self, action):
+        # print(f"step: start")
         
         reward = [0,0]
         
@@ -118,20 +125,25 @@ class TicTacToeEnv(gym.Env):
 
         if not done:
             self.current_player_num = (self.current_player_num + 1) % 2
+        
+        # print(f"step: end\n")
 
         return self.observation, reward, done, {}
 
     def reset(self):
+        # print("reset : start")
         self.board = [Token('.', 0)] * self.num_squares
         self.players = [Player('1', Token('X', 1)), Player('2', Token('O', -1))]
         self.current_player_num = 0
         self.turns_taken = 0
         self.done = False
         logger.debug(f'\n\n---- NEW GAME ----')
+        # print("reset : end\n")
         return self.observation
 
 
     def render(self, mode='human', close=False, verbose = True):
+        # print("render: Start")
         logger.debug('')
         if close:
             return
@@ -149,7 +161,7 @@ class TicTacToeEnv(gym.Env):
         
         if not self.done:
             logger.debug(f'\nLegal actions: {[i for i,o in enumerate(self.legal_actions) if o != 0]}')
-
+        # print("render: end\n")
 
     def rules_move(self):
         if self.current_player.token.number == 1:

@@ -75,6 +75,7 @@ class QwirkleEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
     def __init__(self, verbose = False, manual = False):
+        print("__init__: begining")
         # The first place to change
         # Only two players
         super(QwirkleEnv, self).__init__()
@@ -148,7 +149,7 @@ class QwirkleEnv(gym.Env):
         ### ONE VERY BIG PROBLEM, What happens if the tiles are not 6? Should I just add zero to the end of it?
         self.observation_space = gym.spaces.Box(low=-1, high=1, shape=((self.grid_length * self.grid_length) + self.n_tiles,), dtype=np.float32)
         self.verbose = verbose
-
+        print("__init__: end\n")
     # Anything that part of the RL game is not part of the qwirkle implementation. Like reward, action, 
     
     # Step 2 of conversion, _bag_of_tiles, has been implemented and changed continued. 
@@ -304,6 +305,7 @@ class QwirkleEnv(gym.Env):
     
     @property
     def observation(self):
+        print("observation: start")
         # Get the state of the board
         board_state = self.board.flatten()
 
@@ -315,7 +317,7 @@ class QwirkleEnv(gym.Env):
 
         # Concatenate the board state and the tile state to create a single 1D array
         out = np.concatenate([board_state, tile_state])
-
+        print("observation: end\n")
         return out
     
 
@@ -323,7 +325,7 @@ class QwirkleEnv(gym.Env):
     # if it is empty and if it is legal to place a tile there.
     @property
     def legal_actions(self):
-        legal_actions = np.zeros((self.grid_length, self.grid_length), dtype=np.float32)
+        legal_actions = np.ones(self.grid_length*self.grid_length*self.n_tiles, dtype=np.float32)
         return legal_actions
         # # Iterate over the cells on the board
         # for i in range(self.board.shape[0]):
@@ -606,11 +608,13 @@ class QwirkleEnv(gym.Env):
 
 
     def step(self, action):
+        print(f"step: start")
         # once it took an action what would you do with that just say if it is a good idea or not. 
         # you don't need tunrs_taken. 
         # consider normalising the reward. 
         reward = [0,0]
         tile_index, col, _row = self.action_to_indices(action)
+        print(f"action: {action}")
 
         # the three funcitons will be written down here, checks will be done and if it is true then the "_board" will be updated
         # Here is where the functions go. 
@@ -677,12 +681,13 @@ class QwirkleEnv(gym.Env):
         if not self.done:
             self.current_player_num = (self.current_player_num + 1) % 2
 
-        
+        print(f"step: end\n")
         return self.observation, reward, self.done, {}
 
 
 
     def reset(self):
+        print("reset : start")
         self.current_player_num = 1
         self.done = False
 
@@ -711,6 +716,7 @@ class QwirkleEnv(gym.Env):
 
         # It is like a history of plays, in the game this can happen more than once in one round. 
         self._plays = []
+        print("reset : end")
         return self.observation
  
     # # Dependent on how you define the board and how to reset this.
@@ -768,8 +774,9 @@ class QwirkleEnv(gym.Env):
     #         print(i_display, lines[i], i_display)
 
     def print_board_altered(self, show_valid_placements=False, radius=5):
+        print("print_board_altered : start")
         if len(self._plays) == 0:
-            print('The board is empty.')
+            print('The board is empty.\n')
             return
 
         # Get the coordinates of the last played tile
@@ -803,6 +810,7 @@ class QwirkleEnv(gym.Env):
             i_display = str(i + y_start).zfill(2) if 0 < i < len(lines) - 1 else '  '
             print(i_display, lines[i], i_display)
         print(f"self._plays: {self._plays}")
+        print("print_board_altered : end")
 
     ### HERE TO UNCOMMENT
     def render(self, mode='human', close=False, verbose = True):
@@ -814,6 +822,7 @@ class QwirkleEnv(gym.Env):
         else:
             logger.debug(f"It is Player {self.current_player_num}'s turn to move")
         self.print_board_altered()
+        print("\n")
             
         # logger.debug(' '.join([x.symbol for x in self.board[:self.grid_length]]))
         # logger.debug(' '.join([x.symbol for x in self.board[self.grid_length:self.grid_length*2]]))
