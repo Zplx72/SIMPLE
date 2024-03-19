@@ -102,7 +102,7 @@ class QwirkleEnv(gym.Env):
         # # self.player_hands = [self.draw_tiles(self.n_tiles) for i in range(self.n_players)]
 
         # No need for all the grid stuff perhaps something similar.
-        self.grid_length = 91
+        self.grid_length = 10
         self.num_squares = self.grid_length * self.grid_length
         self.grid_shape = (self.grid_length, self.grid_length)
     
@@ -648,10 +648,12 @@ class QwirkleEnv(gym.Env):
             self.done = self.check_game_over()
             
         elif not bool_valid_play:
-            self.done = True
-            reward = [10, 10]
-            reward[self.current_player_num] = -10
-        
+            self.counter += 1
+            self.done = False
+            reward = [3, 3]
+            reward[self.current_player_num] = -3
+            if self.counter >= 50:
+                self.done = True
         else:
             # Two things need to be done, updating both boards: _board and board. 
             self.done = False
@@ -690,6 +692,7 @@ class QwirkleEnv(gym.Env):
         print("reset : start")
         self.current_player_num = 1
         self.done = False
+        self.counter = 0
 
         # Initialize the bag of tiles going through each color
         # Step 2 of conversion, _bag_of_tiles, has been implemented and changed

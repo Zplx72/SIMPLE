@@ -47,14 +47,14 @@ def value_head(y):
     y = convolutional(y, 4, 1)
     y = Flatten()(y)
     vf = dense(y, 1, batch_norm = False, activation = 'tanh', name='vf')
-    q = dense(y, 91*91*6, batch_norm = False, activation = 'tanh', name='q')
+    q = dense(y, 10*10*6, batch_norm = False, activation = 'tanh', name='q')
     return vf, q
 
 
 def policy_head(y):
     y = convolutional(y, 4, 1)
     y = Flatten()(y)
-    policy = dense(y, 91*91*6, batch_norm = False, activation = None, name='pi')
+    policy = dense(y, 10*10*6, batch_norm = False, activation = None, name='pi')
     return policy
 
 
