@@ -290,7 +290,7 @@ class QwirkleEnv(gym.Env):
         
     #     # So you get the legal actions based on the board state
     #     # Compute the legal actions, 
-    #     # legal_actions = self.legal_actions
+    #     legal_actions = self.legal_actions()
     
     #     # Change the _tiles to tile_state which will be at most a 6 element list, wiht float numbers encoded. 
     #     tile_state = []
@@ -303,24 +303,40 @@ class QwirkleEnv(gym.Env):
 
     #     return out
     
+    # @property
+    # def observation(self):
+    #     print("observation: start")
+    #     # Get the state of the board
+    #     board_state = self.board.flatten()
+
+    #     # Change the _tiles to tile_state which will be at most a 6 element list, with float numbers encoded. 
+    #     tile_state = []
+    #     for i in self._tiles:
+    #         tile_state.append(self.piece_to_float_converter(i))
+    #     tile_state = np.array(tile_state).flatten()
+
+    #     # Concatenate the board state and the tile state to create a single 1D array
+    #     out = np.concatenate([board_state, tile_state])
+    #     print("observation: end\n")
+    #     return out
     @property
     def observation(self):
-        print("observation: start")
         # Get the state of the board
-        board_state = self.board.flatten()
+        # board_state = np.array(self.board).reshape((self.grid_length, self.grid_length))
 
-        # Change the _tiles to tile_state which will be at most a 6 element list, with float numbers encoded. 
+        # Compute the legal actions
+        legal_actions = np.array(self.legal_actions()).reshape((self.grid_length, self.grid_length))
+
+        # Change the _tiles to tile_state which will be at most a self.n_tiles element list, with float numbers encoded.
         tile_state = []
         for i in self._tiles:
             tile_state.append(self.piece_to_float_converter(i))
-        tile_state = np.array(tile_state).flatten()
+        tile_state = np.array(tile_state).reshape((self.grid_length, self.grid_length))
 
-        # Concatenate the board state and the tile state to create a single 1D array
-        out = np.concatenate([board_state, tile_state])
-        print("observation: end\n")
+        # Stack the board state, tile state, and the legal actions along the last dimension
+        out = np.stack([self.board, tile_state, legal_actions], axis=-1)
+
         return out
-    
-
     # Legal actions here goes through every cell on the board and check
     # if it is empty and if it is legal to place a tile there.
 
@@ -335,20 +351,21 @@ class QwirkleEnv(gym.Env):
     def legal_actions(self):
 
         # Make all the actions illegal unless proven otherwise
-        legal_actions = np.zeros(self.grid_length*self.grid_length*self.n_tiles, dtype=np.float32)
-
+        legal_actions = []
         # Go through all the possible actions. 
         for i in range(0, self.grid_length*self.grid_length*self.n_tiles):
             
             # Decode the aciton and check wetheer the action is valid.
-            tile_index, col, _row = self.action_to_indices()
+            tile_index, col, _row = self.action_to_indices(i)
             bool_valid_play = self._is_play_valid(piece=self._tiles[tile_index], x = col, y = _row)
 
             # if the action was valid then turn the index of the legal_actions to 1 indicating that the coresponding aciton is indeed valid. 
             if bool_valid_play:
-                legal_actions[i] = 1
-                
-        return legal_actions
+                legal_actions.append(1)
+            else:
+                legal_actions.append(0)
+
+        return np.array(legal_actions)
         # # Iterate over the cells on the board
         # for i in range(self.board.shape[0]):
         #     for j in range(self.board.shape[1]):
