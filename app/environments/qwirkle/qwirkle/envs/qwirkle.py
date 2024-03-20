@@ -323,9 +323,31 @@ class QwirkleEnv(gym.Env):
 
     # Legal actions here goes through every cell on the board and check
     # if it is empty and if it is legal to place a tile there.
+
+    def action_to_indices(self, action):
+        tile_index = action % self.n_tiles
+        two_d_index = action // self.n_tiles
+        col = two_d_index % self.grid_length
+        _row = two_d_index // self.grid_length
+        return tile_index, col, _row
+    
     @property
     def legal_actions(self):
-        legal_actions = np.ones(self.grid_length*self.grid_length*self.n_tiles, dtype=np.float32)
+
+        # Make all the actions illegal unless proven otherwise
+        legal_actions = np.zeros(self.grid_length*self.grid_length*self.n_tiles, dtype=np.float32)
+
+        # Go through all the possible actions. 
+        for i in range(0, self.grid_length*self.grid_length*self.n_tiles):
+            
+            # Decode the aciton and check wetheer the action is valid.
+            tile_index, col, _row = self.action_to_indices()
+            bool_valid_play = self._is_play_valid(piece=self._tiles[tile_index], x = col, y = _row)
+
+            # if the action was valid then turn the index of the legal_actions to 1 indicating that the coresponding aciton is indeed valid. 
+            if bool_valid_play:
+                legal_actions[i] = 1
+                
         return legal_actions
         # # Iterate over the cells on the board
         # for i in range(self.board.shape[0]):
@@ -393,12 +415,7 @@ class QwirkleEnv(gym.Env):
         return self.flag_is_board_empty
 
 
-    def action_to_indices(self, action):
-        tile_index = action % self.n_tiles
-        two_d_index = action // self.n_tiles
-        col = two_d_index % self.grid_length
-        _row = two_d_index // self.grid_length
-        return tile_index, col, _row
+
 
     def score(self):
         """Return the score for the current turn"""
