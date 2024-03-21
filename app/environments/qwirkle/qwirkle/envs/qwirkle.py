@@ -302,9 +302,17 @@ class QwirkleEnv(gym.Env):
     #     out = np.stack([board_state, tile_state], axis=-1)
 
     #     return out
+    # his function seems to be swapping a player's current tiles with new ones 
+    # from the main bag, and then returning the old tiles to the main bag.
     def swap_tiles(self):
+        auxilary_bag =  self._tiles
+        self._tiles = []
+
+        self.pick_tiles(self._bag_of_tiles)
         
-        self.flag_zero_check = False
+        self._bag_of_tiles.append(auxilary_bag)
+        self.flag_board_zero_check = False
+        print("\nTILES ARE SWAPPED!\n")
         return
 
 
@@ -312,7 +320,7 @@ class QwirkleEnv(gym.Env):
     def legal_actions(self):
 
         # Make all the actions illegal unless proven otherwise
-        legal_actions = []
+        
         # counter = 0
         
         # In an instance of the game that the tile need to be put down and _is_play_valid would turn false, then we put all the actions to be equal to 1. Meaning it is fine to take any action it is desired. 
@@ -325,6 +333,7 @@ class QwirkleEnv(gym.Env):
             return np.ones((self.grid_length*self.grid_length*self.n_tiles), np.float32)
 
         while True:
+            legal_actions = []
             # Go through all the possible actions. 
             for i in range(0, self.grid_length*self.grid_length*self.n_tiles):
                 
@@ -338,9 +347,13 @@ class QwirkleEnv(gym.Env):
                 else:
                     legal_actions.append(0)
             
-            if np.all(legal_actions == 0) and self.flag_board_zero_check:
+            if np.all(np.array(legal_actions) == 0) and self.flag_board_zero_check:
+                print(f"\nself._tiles before swapping: {self._tiles}")
                 self.swap_tiles()
+                print(f"self._tiles after swapping: {self._tiles}")
+                print(" This is the if statement part\n")
             else:
+                print(f"\nThis is the else part of the while loop: flag_board_zero_check: {self.flag_board_zero_check} and legal_actions: {np.all(legal_actions == 0)}\n")
                 self.flag_board_zero_check = True
                 break            
 
