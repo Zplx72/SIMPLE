@@ -102,7 +102,7 @@ class QwirkleEnv(gym.Env):
         # # self.player_hands = [self.draw_tiles(self.n_tiles) for i in range(self.n_players)]
 
         # No need for all the grid stuff perhaps something similar.
-        self.grid_length = 10
+        self.grid_length = 30
         self.num_squares = self.grid_length * self.grid_length
         self.grid_shape = (self.grid_length, self.grid_length)
     
@@ -302,12 +302,26 @@ class QwirkleEnv(gym.Env):
     #     out = np.stack([board_state, tile_state], axis=-1)
 
     #     return out
+    def swap_tiles(self):
+        return
+
+
     @property
     def legal_actions(self):
 
         # Make all the actions illegal unless proven otherwise
         legal_actions = []
-        # Go through all the possible actions. 
+        
+        # In an instance of the game that the tile need to be put down and _is_play_valid would turn false, then we put all the actions to be equal to 1. Meaning it is fine to take any action it is desired. 
+        # After that it will never go trough this if statement ever again
+        print(f"This is self.flag_is_board_empty {self.flag_is_board_empty} Also double check if the board is empty {np.all(self.board == float(0))}")
+
+        if self.flag_is_board_empty:
+            print(f"The board is empty now? {np.all(self.board == float(0))}")
+            self.function_is_board_empty()
+            return np.ones((self.grid_length*self.grid_length*self.n_tiles), np.float32)
+
+         # Go through all the possible actions. 
         for i in range(0, self.grid_length*self.grid_length*self.n_tiles):
             
             # Decode the aciton and check wetheer the action is valid.
@@ -319,7 +333,13 @@ class QwirkleEnv(gym.Env):
                 legal_actions.append(1)
             else:
                 legal_actions.append(0)
+        
+        if np.all(legal_actions == 0):
+            self.swap_tiles()            
 
+        
+        print(f"Is legal_actions all zeros? {np.all(np.array(legal_actions) == 0)}")
+        # print(legal_actions)
         return np.array(legal_actions)
     
     @property
@@ -850,6 +870,7 @@ class QwirkleEnv(gym.Env):
         for i in range(0, len(lines)):
             i_display = str(i + y_start).zfill(2) if 0 < i < len(lines) - 1 else '  '
             print(i_display, lines[i], i_display)
+        print(f"\nThe tiles right now {self._tiles}\n ")
         print(f"self._plays: {self._plays}")
         print("print_board_altered : end")
 
