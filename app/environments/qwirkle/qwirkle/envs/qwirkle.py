@@ -303,6 +303,8 @@ class QwirkleEnv(gym.Env):
 
     #     return out
     def swap_tiles(self):
+        
+        self.flag_zero_check = False
         return
 
 
@@ -311,6 +313,7 @@ class QwirkleEnv(gym.Env):
 
         # Make all the actions illegal unless proven otherwise
         legal_actions = []
+        # counter = 0
         
         # In an instance of the game that the tile need to be put down and _is_play_valid would turn false, then we put all the actions to be equal to 1. Meaning it is fine to take any action it is desired. 
         # After that it will never go trough this if statement ever again
@@ -321,21 +324,25 @@ class QwirkleEnv(gym.Env):
             self.function_is_board_empty()
             return np.ones((self.grid_length*self.grid_length*self.n_tiles), np.float32)
 
-         # Go through all the possible actions. 
-        for i in range(0, self.grid_length*self.grid_length*self.n_tiles):
-            
-            # Decode the aciton and check wetheer the action is valid.
-            tile_index, col, _row = self.action_to_indices(i)
-            bool_valid_play = self._is_play_valid(piece=self._tiles[tile_index], x = col, y = _row)
+        while True:
+            # Go through all the possible actions. 
+            for i in range(0, self.grid_length*self.grid_length*self.n_tiles):
+                
+                # Decode the aciton and check wetheer the action is valid.
+                tile_index, col, _row = self.action_to_indices(i)
+                bool_valid_play = self._is_play_valid(piece=self._tiles[tile_index], x = col, y = _row)
 
-            # if the action was valid then turn the index of the legal_actions to 1 indicating that the coresponding aciton is indeed valid. 
-            if bool_valid_play:
-                legal_actions.append(1)
+                # if the action was valid then turn the index of the legal_actions to 1 indicating that the coresponding aciton is indeed valid. 
+                if bool_valid_play:
+                    legal_actions.append(1)
+                else:
+                    legal_actions.append(0)
+            
+            if np.all(legal_actions == 0) and self.flag_board_zero_check:
+                self.swap_tiles()
             else:
-                legal_actions.append(0)
-        
-        if np.all(legal_actions == 0):
-            self.swap_tiles()            
+                self.flag_board_zero_check = True
+                break            
 
         
         print(f"Is legal_actions all zeros? {np.all(np.array(legal_actions) == 0)}")
@@ -748,6 +755,7 @@ class QwirkleEnv(gym.Env):
 
     def reset(self):
         print("reset : start")
+        self.flag_board_zero_check = True
         self.current_player_num = 1
         self.done = False
         self.counter = 0
