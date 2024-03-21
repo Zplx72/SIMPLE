@@ -305,12 +305,12 @@ class QwirkleEnv(gym.Env):
     # his function seems to be swapping a player's current tiles with new ones 
     # from the main bag, and then returning the old tiles to the main bag.
     def swap_tiles(self):
-        auxilary_bag =  self._tiles
-        self._tiles = []
+        auxilary_bag = self._tiles.copy()
+        self._tiles.clear()
 
         self.pick_tiles(self._bag_of_tiles)
         
-        self._bag_of_tiles.append(auxilary_bag)
+        self._bag_of_tiles.extend(auxilary_bag)
         self.flag_board_zero_check = False
         print("\nTILES ARE SWAPPED!\n")
         return
