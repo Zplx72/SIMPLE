@@ -147,7 +147,7 @@ class QwirkleEnv(gym.Env):
         # ))     
         # Instead of an observation space that is a tuple. I added a Box that concatinates the board and the tiles on one dimension. 
         ### ONE VERY BIG PROBLEM, What happens if the tiles are not 6? Should I just add zero to the end of it?
-        self.observation_space = gym.spaces.Box(low=-1, high=1, shape=((self.grid_length * self.grid_length) + self.n_tiles + (self.grid_length * self.grid_length * self.n_tiles),), dtype=np.float32)
+        self.observation_space = gym.spaces.Box(low=-1, high=1, shape=((self.grid_length * self.grid_length) + self.n_tiles + (self.grid_length * self.grid_length * self.n_tiles + 1),), dtype=np.float32)
         self.verbose = verbose
         print("__init__: end\n")
     # Anything that part of the RL game is not part of the qwirkle implementation. Like reward, action, 
@@ -351,6 +351,10 @@ class QwirkleEnv(gym.Env):
                 else:
                     legal_actions.append(0)
             
+            # Regardless of whether it will be all zeros or not I will need to append a zero at the end.
+            # Just for the dimensions to make sense.
+            legal_actions.append(0)
+
             if np.all(np.array(legal_actions) == 0) and self.flag_board_zero_check:
                 print(f"\nself._tiles before swapping: {self._tiles}")
                 self.swap_tiles()
@@ -358,15 +362,18 @@ class QwirkleEnv(gym.Env):
                 print(" This is the if statement part\n")
             else:
                 print(f"\nThis is the else part of the while loop: flag_board_zero_check: {self.flag_board_zero_check} and is all legal_actions zero ? {np.all(np.array(legal_actions) == 0)}\n")
-                self.flag_board_zero_check = True
+                # self.flag_board_zero_check = True
                 break            
             
             # This if statment checks if the tile has already been swapped and still there is no legal_actions then it will return a numpy array that only the last element is a legal action for it.
             # This will help 
-            if (self.flag_board_zero_check == False) and  np.all(np.array(legal_actions) == 0):
-                only_skipping_is_legal = np.zeros((self.grid_length*self.grid_length*self.n_tiles + 1), np.float32)
-                only_skipping_is_legal[-1] = 1
-                return only_skipping_is_legal
+        if (self.flag_board_zero_check == False) and  np.all(np.array(legal_actions) == 0):
+            only_skipping_is_legal = np.zeros((self.grid_length*self.grid_length*self.n_tiles + 1), np.float32)
+            only_skipping_is_legal[self.grid_length*self.grid_length*self.n_tiles] = 1
+            self.flag_board_zero_check = True
+            print(f"only_skipping_is_legal the length: {len(only_skipping_is_legal)}")
+            print(f"only_skipping_is_legal last elements:  {only_skipping_is_legal[-1]}\n")
+            return only_skipping_is_legal
 
 
         print(f"Is legal_actions all zeros? {np.all(np.array(legal_actions) == 0)}")
@@ -708,6 +715,8 @@ class QwirkleEnv(gym.Env):
         # This is the first if statement to check whether the action is to skip or not:
         if action == (self.grid_length * self.grid_length * self.n_tiles):
 
+            # Don't see the point to add anything else. as everything remains the same.
+            self.done = self.check_game_over()
             return self.observation, reward, self.done, {}
 
 
