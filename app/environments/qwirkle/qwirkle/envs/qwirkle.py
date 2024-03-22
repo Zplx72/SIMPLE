@@ -356,9 +356,11 @@ class QwirkleEnv(gym.Env):
             legal_actions.append(0)
 
             if np.all(np.array(legal_actions) == 0) and self.flag_board_zero_check:
-                print(f"\nself._tiles before swapping: {self._tiles}")
+                # print(f"\nself._tiles before swapping: {self._tiles}")
+                self.print_tiles(self._tiles)
                 self.swap_tiles()
-                print(f"self._tiles after swapping: {self._tiles}")
+                # print(f"self._tiles after swapping: {self._tiles}")
+                self.print_tiles(self._tiles)
                 print(" This is the if statement part\n")
             else:
                 print(f"\nThis is the else part of the while loop: flag_board_zero_check: {self.flag_board_zero_check} and is all legal_actions zero ? {np.all(np.array(legal_actions) == 0)}\n")
@@ -880,6 +882,12 @@ class QwirkleEnv(gym.Env):
     #     for i in range(0, len(lines)):
     #         i_display = str(i).zfill(2) if 0 < i < len(lines) - 1 else '  '
     #         print(i_display, lines[i], i_display)
+    def print_tiles(self, tiles):
+        tiles_output = ''
+        for tile in tiles:
+            tiles_output += colored(tile.shape, tile.color) + ' '
+        print('\n  Your Tiles: %s' % tiles_output)
+        print('              1 2 3 4 5 6\n')
 
     def print_board_altered(self, show_valid_placements=False, radius=5):
         print("print_board_altered : start")
@@ -931,6 +939,7 @@ class QwirkleEnv(gym.Env):
         else:
             logger.debug(f"It is Player {self.current_player_num}'s turn to move")
         self.print_board_altered()
+        self.print_tiles(self._tiles)
         print("\n")       
             
         # logger.debug(' '.join([x.symbol for x in self.board[:self.grid_length]]))
