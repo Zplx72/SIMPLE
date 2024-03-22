@@ -325,13 +325,17 @@ class QwirkleEnv(gym.Env):
         
         # In an instance of the game that the tile need to be put down and _is_play_valid would turn false, then we put all the actions to be equal to 1. Meaning it is fine to take any action it is desired. 
         # After that it will never go trough this if statement ever again
-        print(f"This is self.flag_is_board_empty {self.flag_is_board_empty} Also double check if the board is empty {np.all(self.board == float(0))}")
+        # print(f"This is self.flag_is_board_empty {self.flag_is_board_empty} Also double check if the board is empty {np.all(self.board == float(0))}")
 
+        # This needed to be added to add functionality, of in case the board is empty then the skipping will not be an option
         if self.flag_is_board_empty:
-            print(f"The board is empty now? {np.all(self.board == float(0))}")
+            # print(f"The board is empty now? {np.all(self.board == float(0))}")
             self.function_is_board_empty()
-            return np.ones((self.grid_length*self.grid_length*self.n_tiles), np.float32)
+            first_move_legal_actions = np.ones((self.grid_length*self.grid_length*self.n_tiles + 1), np.float32)
+            first_move_legal_actions[-1] = 0
+            return first_move_legal_actions
 
+        # 
         while True:
             legal_actions = []
             # Go through all the possible actions. 
@@ -353,11 +357,18 @@ class QwirkleEnv(gym.Env):
                 print(f"self._tiles after swapping: {self._tiles}")
                 print(" This is the if statement part\n")
             else:
-                print(f"\nThis is the else part of the while loop: flag_board_zero_check: {self.flag_board_zero_check} and legal_actions: {np.all(legal_actions == 0)}\n")
+                print(f"\nThis is the else part of the while loop: flag_board_zero_check: {self.flag_board_zero_check} and is all legal_actions zero ? {np.all(np.array(legal_actions) == 0)}\n")
                 self.flag_board_zero_check = True
                 break            
+            
+            # This if statment checks if the tile has already been swapped and still there is no legal_actions then it will return a numpy array that only the last element is a legal action for it.
+            # This will help 
+            if (self.flag_board_zero_check == False) and  np.all(np.array(legal_actions) == 0):
+                only_skipping_is_legal = np.zeros((self.grid_length*self.grid_length*self.n_tiles + 1), np.float32)
+                only_skipping_is_legal[-1] = 1
+                return only_skipping_is_legal
 
-        
+
         print(f"Is legal_actions all zeros? {np.all(np.array(legal_actions) == 0)}")
         # print(legal_actions)
         return np.array(legal_actions)
@@ -694,9 +705,15 @@ class QwirkleEnv(gym.Env):
         tile_index, col, _row = self.action_to_indices(action)
         print(f"action: {action}")
 
+        # This is the first if statement to check whether the action is to skip or not:
+        if action == (self.grid_length * self.grid_length * self.n_tiles):
+
+            return self.observation, reward, self.done, {}
+
+
         # the three funcitons will be written down here, checks will be done and if it is true then the "_board" will be updated
         # Here is where the functions go. 
-
+        
         # you check if the play is valid. 
         bool_valid_play = self._is_play_valid(piece=self._tiles[tile_index], x = col, y = _row)
         
@@ -905,7 +922,7 @@ class QwirkleEnv(gym.Env):
         else:
             logger.debug(f"It is Player {self.current_player_num}'s turn to move")
         self.print_board_altered()
-        print("\n")
+        print("\n")       
             
         # logger.debug(' '.join([x.symbol for x in self.board[:self.grid_length]]))
         # logger.debug(' '.join([x.symbol for x in self.board[self.grid_length:self.grid_length*2]]))
