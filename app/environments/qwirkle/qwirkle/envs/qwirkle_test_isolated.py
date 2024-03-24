@@ -5,7 +5,7 @@ import random
 from termcolor import colored
 
 
-from stable_baselines import logger
+# from stable_baselines import logger
 
 class COLORS:
     RED = 'red'
@@ -50,7 +50,7 @@ class Piece:
 
 class QwirkleEnv(gym.Env):
     def __init__(self, verbose = False, manual = False):
-        logger.debug("__init__: begining")
+        # logger.debug("__init__: begining")
         super(QwirkleEnv, self).__init__()
         self.name = 'qwirkle'
         self.manual = manual
@@ -68,6 +68,9 @@ class QwirkleEnv(gym.Env):
         self._tiles = []
         self._generate_new_bag_of_tiles()
 
+        self.grid_length = 30
+        self.num_squares = self.grid_length * self.grid_length
+        self.grid_shape = (self.grid_length, self.grid_length)
         # Instansiate players
         # self.players = [Player('1', self.pick_tiles_player_specific(self._bag_of_tiles)), Player('2', self.pick_tiles_player_specific(self._bag_of_tiles))]
         # self.current_player = self.player1
@@ -128,17 +131,19 @@ class QwirkleEnv(gym.Env):
                 for s in range(len(shapes)):
                     self._bag_of_tiles.append(Piece(color=colors[c], shape=shapes[s]))    
         # [blue ●, magenta ●, red ★, green ★, magenta ●, magenta ❈]
-        self._tile = [self._bag_of_tiles.pop(Piece(color=colors[0], shape=shapes[0])), self._bag_of_tiles.pop(Piece(color=colors[3], shape= shapes[0])), self._bag_of_tiles.pop(Piece(color=colors[4], shape= shapes[4])), self._bag_of_tiles.pop(Piece(color=colors[2], shape= shapes[4])), self._bag_of_tiles.pop(Piece(color=colors[3], shape= shapes[0])), self._bag_of_tiles.pop(Piece(color=colors[3], shape= shapes[2]))]
+        self._tile = [Piece(color=colors[0], shape=shapes[0]), Piece(color=colors[3], shape= shapes[0]), Piece(color=colors[4], shape= shapes[4]), Piece(color=colors[2], shape= shapes[4]), Piece(color=colors[3], shape= shapes[0]), Piece(color=colors[3], shape= shapes[2])]
+        print(self._tile)
+        for i in self._tile:
+            self._bag_of_tiles.remove(i)
+    # # step 3 of conversion: add the pick tiles function
+    # def pick_tiles_player_specific(self, bag_of_tiles):
+    #     rnd = Random()
+    #     _tiles = []
+    #     while len(_tiles) < 6 and len(bag_of_tiles) > 0:
+    #         i = rnd.randint(0, len(bag_of_tiles) - 1)
 
-    # step 3 of conversion: add the pick tiles function
-    def pick_tiles_player_specific(self, bag_of_tiles):
-        rnd = Random()
-        _tiles = []
-        while len(_tiles) < 6 and len(bag_of_tiles) > 0:
-            i = rnd.randint(0, len(bag_of_tiles) - 1)
-
-            _tiles.append(bag_of_tiles.pop(i))    
-        return _tiles    
+    #         _tiles.append(bag_of_tiles.pop(i))    
+    #     return _tiles    
 
     def pick_tiles(self, bag_of_tiles):
         rnd = Random()
@@ -156,9 +161,18 @@ class QwirkleEnv(gym.Env):
         self._bag_of_tiles.extend(auxilary_bag)
         self.flag_board_zero_check = False
         # print("\nTILES ARE SWAPPED!\n")
-        logger.debug("\nTILES ARE SWAPPED!\n")
+        # logger.debug("\nTILES ARE SWAPPED!\n")
         return
-
+    
+    def function_is_board_empty(self):
+        if np.all(self.board == float(0)):
+            self.flag_is_board_empty = True
+            # print(f"The 'if' part of the board, flag is: {self.flag_is_board_empty}")            
+        else:
+            self.flag_is_board_empty = False
+            # print(f"The 'else' part of the board, flag is: {self.flag_is_board_empty}")  
+        return self.flag_is_board_empty
+    
     def legal_actions(self):
 
         if self.flag_is_board_empty:
@@ -179,7 +193,7 @@ class QwirkleEnv(gym.Env):
                 # Decode the aciton and check wetheer the action is valid.
                 tile_index, col, _row = self.action_to_indices(i)
                 checked_actions.add((tile_index, col, _row))
-                logger.log(f"Checking position ({_row}, {col}) for shape: {self._tiles[tile_index]}")
+                # logger.log(f"Checking position ({_row}, {col}) for shape: {self._tiles[tile_index]}")
                 # print(f"From the legal actions function: self._tiles {self._tiles}")
                 bool_valid_play = self._is_play_valid(piece=self._tiles[tile_index], x = col, y = _row)
 
@@ -239,11 +253,11 @@ class QwirkleEnv(gym.Env):
             return False
         if x == len(self._board[0]) - 1 and y == 0:
             return False
-        logger.log("passes position check")
+        # logger.log("passes position check")
         # Make sure the placement is not already taken
         if self._board[y][x] is not None:
             return False
-        logger.log("is not occupied")
+        # logger.log("is not occupied")
         # Make sure the placement has at least one adjacent placement
         adjacent_checks = []
         if y - 1 >= 0:
@@ -258,7 +272,7 @@ class QwirkleEnv(gym.Env):
         if all(adjacent_checks):
             return False
 
-        logger.log("Has adjacent tile")
+        # logger.log("Has adjacent tile")
         # print(f"Before play for {piece}")
         # Validate the play connects to an existing play
         plays = [(play[0], play[1]) for play in self._plays]
@@ -322,7 +336,7 @@ class QwirkleEnv(gym.Env):
 
         if not self._is_row_valid(row):
             return False
-        logger.log(f"{row}, passed row check")
+        # logger.log(f"{row}, passed row check")
         # print(f"after rows for {piece}")
         # Get & Verify all the tiles adjacent vertically
         row = [piece]
@@ -341,7 +355,7 @@ class QwirkleEnv(gym.Env):
         if not self._is_row_valid(row):
             return False
         
-        logger.log(f"passed column check {row}")
+        # logger.log(f"passed column check {row}")
         # print(f"after columns for {piece}")
         return True
 
@@ -375,5 +389,10 @@ class QwirkleEnv(gym.Env):
             return False
 
         return True
-   
+
+
+def test():
+    qwirkle = QwirkleEnv()
+    legal_actions = qwirkle.legal_actions()
     
+test()
