@@ -54,18 +54,24 @@ class Piece:
 # if you wanted to add a method that allows a player to swap tiles from their hand with tiles from the bag, it might make sense to add this method to a Player class.
 # However, if you later decide to add more complexity to your game (like more player-specific attributes or methods), you might want to consider using a `Player` class. For now, your current implementation is functional and appropriate for your game's requirements.
 
+
+
 class Player():
-    def __init__(self, id):
+    def __init__(self, id, _tiles):
+    def __init__(self, id, _tiles):
         self.id = id
         self.score = 0
-        self.tiles = []        
+        self._tiles = _tiles
+        print(f"From player, self._tiles: {self._tiles}")
+        # self.pick_tiles(self._bag_of_tiles)       
+        self._tiles = _tiles
+        print(f"From player, self._tiles: {self._tiles}")
+        # self.pick_tiles(self._bag_of_tiles)       
 
 class Token():
     def __init__(self, symbol, number):
         self.number = number
         self.symbol = symbol
-        
-
     
 ##### This is the first step. The most important is to think about how to encode the state space and action space. And then it's the reward function. DONE
 ##### Check how the tictactooe is conceptually encoded and try to conceptually encode qwrikle. and then try to implement it.  Chekc how they all games do ti and see how you can 
@@ -87,7 +93,8 @@ class QwirkleEnv(gym.Env):
         # self.shapes = ['circle', 'square', 'diamond', 'clover', 'star', 'cross']
         self.n_tiles = 6
         self.n_players = 2
-        self.current_player_num = 1
+        # self.current_player_num = 1
+        # self.current_player_num = 1
 
         # # Initialize the bag of tiles going through each color
         # # Step 2 of conversion, _bag_of_tiles, has been implemented and changed
@@ -181,12 +188,34 @@ class QwirkleEnv(gym.Env):
     
 
     # step 3 of conversion: add the pick tiles function
+    def pick_tiles_player_specific(self, bag_of_tiles):
+        rnd = Random()
+        _tiles = []
+        while len(_tiles) < 6 and len(bag_of_tiles) > 0:
+            i = rnd.randint(0, len(bag_of_tiles) - 1)
+
+            _tiles.append(bag_of_tiles.pop(i))    
+        return _tiles    
+
+    def pick_tiles_player_specific(self, bag_of_tiles):
+        rnd = Random()
+        _tiles = []
+        while len(_tiles) < 6 and len(bag_of_tiles) > 0:
+            i = rnd.randint(0, len(bag_of_tiles) - 1)
+
+            _tiles.append(bag_of_tiles.pop(i))    
+        return _tiles    
+
     def pick_tiles(self, bag_of_tiles):
         rnd = Random()
+        # self._tiles = []
+        # self._tiles = []
         while len(self._tiles) < 6 and len(bag_of_tiles) > 0:
             i = rnd.randint(0, len(bag_of_tiles) - 1)
 
             self._tiles.append(bag_of_tiles.pop(i))    
+        # return _tiles
+        # return _tiles
 
     # converts the piece from an object to it's float represetnation. 
             # it checks if the dictionary exists and if so it will look up the color and shape to find the decimal for it
@@ -225,6 +254,7 @@ class QwirkleEnv(gym.Env):
                         counter += 1
                     self.look_up_dict[str(Piece(color=colors[c], shape=shapes[s]))] = zero_check
                     counter += 1
+            print(self.look_up_dict)
         
             # # print(look_up_dict)
             # # print(type(piece))
@@ -312,7 +342,8 @@ class QwirkleEnv(gym.Env):
         
         self._bag_of_tiles.extend(auxilary_bag)
         self.flag_board_zero_check = False
-        print("\nTILES ARE SWAPPED!\n")
+        # print("\nTILES ARE SWAPPED!\n")
+        logger.debug("\nTILES ARE SWAPPED!\n")
         return
 
 
@@ -336,13 +367,18 @@ class QwirkleEnv(gym.Env):
             return first_move_legal_actions
 
         # 
+        n_combinations = self.grid_length*self.grid_length*self.n_tiles
         while True:
             legal_actions = []
+            checked_actions = set()
             # Go through all the possible actions. 
             for i in range(0, self.grid_length*self.grid_length*self.n_tiles):
                 
                 # Decode the aciton and check wetheer the action is valid.
                 tile_index, col, _row = self.action_to_indices(i)
+                checked_actions.add((tile_index, col, _row))
+                logger.log(f"Checking position ({_row}, {col}) for shape: {self._tiles[tile_index]}")
+                # print(f"From the legal actions function: self._tiles {self._tiles}")
                 bool_valid_play = self._is_play_valid(piece=self._tiles[tile_index], x = col, y = _row)
 
                 # if the action was valid then turn the index of the legal_actions to 1 indicating that the coresponding aciton is indeed valid. 
@@ -361,7 +397,7 @@ class QwirkleEnv(gym.Env):
                 self.swap_tiles()
                 # print(f"self._tiles after swapping: {self._tiles}")
                 self.print_tiles(self._tiles)
-                print(" This is the if statement part\n")
+                print(f"\nThis is the if part of the while loop: flag_board_zero_check: {self.flag_board_zero_check} and is all legal_actions zero ? {np.all(np.array(legal_actions) == 0)}\n")
             else:
                 print(f"\nThis is the else part of the while loop: flag_board_zero_check: {self.flag_board_zero_check} and is all legal_actions zero ? {np.all(np.array(legal_actions) == 0)}\n")
                 # self.flag_board_zero_check = True
@@ -369,6 +405,7 @@ class QwirkleEnv(gym.Env):
             
             # This if statment checks if the tile has already been swapped and still there is no legal_actions then it will return a numpy array that only the last element is a legal action for it.
             # This will help 
+        print(f"All actions checked? {len(checked_actions) == n_combinations}")
         if (self.flag_board_zero_check == False) and  np.all(np.array(legal_actions) == 0):
             only_skipping_is_legal = np.zeros((self.grid_length*self.grid_length*self.n_tiles + 1), np.float32)
             only_skipping_is_legal[self.grid_length*self.grid_length*self.n_tiles] = 1
@@ -566,7 +603,6 @@ class QwirkleEnv(gym.Env):
         """Validates a move is within the board, not on the corners, not
            replacing a existing piece, adjacent to an existing tile and valid in
            its row/column"""
-
         # Make sure the placement is not on a corner and is inside the board
         if x < 0 or x >= len(self._board[0]):
             return False
@@ -580,11 +616,11 @@ class QwirkleEnv(gym.Env):
             return False
         if x == len(self._board[0]) - 1 and y == 0:
             return False
-
+        logger.log("passes position check")
         # Make sure the placement is not already taken
         if self._board[y][x] is not None:
             return False
-
+        logger.log("is not occupied")
         # Make sure the placement has at least one adjacent placement
         adjacent_checks = []
         if y - 1 >= 0:
@@ -599,6 +635,8 @@ class QwirkleEnv(gym.Env):
         if all(adjacent_checks):
             return False
 
+        logger.log("Has adjacent tile")
+        # print(f"Before play for {piece}")
         # Validate the play connects to an existing play
         plays = [(play[0], play[1]) for play in self._plays]
         if len(plays) > 0:
@@ -641,10 +679,12 @@ class QwirkleEnv(gym.Env):
             if not in_plays:
                 return False
 
+        # print(F"after play for {piece}")
         # Don't test for piece shape/color if no piece provided
         if piece is None:
             return True
 
+        # print(f"before rows for {piece}")
         # Get & Verify all the tiles adjacent horizontally
         row = [piece]
         t_x = x + 1
@@ -659,7 +699,8 @@ class QwirkleEnv(gym.Env):
 
         if not self._is_row_valid(row):
             return False
-
+        logger.log(f"{row}, passed row check")
+        # print(f"after rows for {piece}")
         # Get & Verify all the tiles adjacent vertically
         row = [piece]
         t_y = y + 1
@@ -672,9 +713,13 @@ class QwirkleEnv(gym.Env):
             row.append(self._board[t_y][x])
             t_y -= 1
 
+        # print(f"before columns {piece}")
+        # print(f"{row}, ({x}, {y})")
         if not self._is_row_valid(row):
             return False
-
+        
+        logger.log(f"passed column check {row}")
+        # print(f"after columns for {piece}")
         return True
 
     def _is_row_valid(self, row):
@@ -684,22 +729,26 @@ class QwirkleEnv(gym.Env):
 
         if len(row) == 1:
             return True
-
+        # print(f"before same colour check for {row[0]}")
         if all(row[i].color == row[0].color for i in range(len(row))):
             shapes = []
             for i in range(len(row)):
                 if row[i].shape in shapes:
                     return False
                 shapes.append(row[i].shape)
-
+            
+            # print(f"after same colour check for {row[0]}")
+            
         elif all(row[i].shape == row[0].shape for i in range(len(row))):
+            print(F"before same shape for {row[0]}")
             colors = []
             for i in range(len(row)):
                 if row[i].color in colors:
                     return False
                 colors.append(row[i].color)
-
+            # print(f"after same shape for {row[0]}")
         else:
+            # print(f"Else: {row}")
             return False
 
         return True
@@ -726,6 +775,8 @@ class QwirkleEnv(gym.Env):
         # Here is where the functions go. 
         
         # you check if the play is valid. 
+        # print(f"From the step function: self._tiles {self._tiles}")
+        # print(f"From the step function: self._tiles {self._tiles}")
         bool_valid_play = self._is_play_valid(piece=self._tiles[tile_index], x = col, y = _row)
         
         # checks if the board is empty 
@@ -788,16 +839,36 @@ class QwirkleEnv(gym.Env):
 
         if not self.done:
             self.current_player_num = (self.current_player_num + 1) % 2
+            print(f"About to switch players now current_player number{self.current_player.id}")
+            self._tiles = self.current_player._tiles
+            # self.switch_player()
+            print(f"About to switch players now current_player number{self.current_player.id}")
+            self._tiles = self.current_player._tiles
+            # self.switch_player()
 
         print(f"step: end\n")
         return self.observation, reward, self.done, {}
-
+    
+    # Swtiches player at then end of the round
+    # It is used as a property so no need to be called, it will be called instantly 
+    @property
+    def current_player(self):
+        return self.players[self.current_player_num]
+    
+    # Swtiches player at then end of the round
+    # It is used as a property so no need to be called, it will be called instantly 
+    @property
+    def current_player(self):
+        return self.players[self.current_player_num]
 
 
     def reset(self):
         print("reset : start")
         self.flag_board_zero_check = True
-        self.current_player_num = 1
+
+        self.current_player_num = 0
+
+        self.current_player_num = 0
         self.done = False
         self.counter = 0
 
@@ -806,17 +877,29 @@ class QwirkleEnv(gym.Env):
         self._bag_of_tiles = []
         self._generate_new_bag_of_tiles()
 
-        self._tiles = []
-        self.pick_tiles(self._bag_of_tiles)
+        # Instansiate players
+        self.players = [Player('1', self.pick_tiles_player_specific(self._bag_of_tiles)), Player('2', self.pick_tiles_player_specific(self._bag_of_tiles))]
+        # self.current_player = self.player1
+
+        self._tiles = self.current_player._tiles
+        # self.pick_tiles(self._bag_of_tiles)
+        # self.current_player._tiles = self._tiles
+        # Instansiate players
+        self.players = [Player('1', self.pick_tiles_player_specific(self._bag_of_tiles)), Player('2', self.pick_tiles_player_specific(self._bag_of_tiles))]
+        # self.current_player = self.player1
+
+        self._tiles = self.current_player._tiles
+        # self.pick_tiles(self._bag_of_tiles)
+        # self.current_player._tiles = self._tiles
         # print(len(self.bag_of_tiles))
+        # This board is purly numeric.
+        self.board = np.zeros((self.grid_length, self.grid_length), dtype=np.float32)
 
         # Initialize the players' hands
         # self.player_hands = [self.draw_tiles(self.n_tiles) for i in range(self.n_players)]
         # Initialize the board
         # 12 has been gotten rid of as, the only thing on the board would be an integer mapped from the tile to the class. 
 
-        # This board is purly numeric.
-        self.board = np.zeros((self.grid_length, self.grid_length), dtype=np.float32)
 
         # This board is aligned with what the other source code have. 
         self._board = [[None] * self.grid_length for i in range(self.grid_length)]
@@ -827,6 +910,8 @@ class QwirkleEnv(gym.Env):
         # It is like a history of plays, in the game this can happen more than once in one round. 
         self._plays = []
         print("reset : end")
+        logger.debug(f'\n\n---- NEW GAME ----')
+        logger.debug(f'\n\n---- NEW GAME ----')
         return self.observation
  
     # # Dependent on how you define the board and how to reset this.
@@ -886,8 +971,10 @@ class QwirkleEnv(gym.Env):
         tiles_output = ''
         for tile in tiles:
             tiles_output += colored(tile.shape, tile.color) + ' '
-        print('\n  Your Tiles: %s' % tiles_output)
-        print('              1 2 3 4 5 6\n')
+        # logger.debug('\n  Your Tiles: %s' % tiles_output)
+        # logger.debug('              1 2 3 4 5 6\n')
+        logger.debug(f"tiles: {tiles}")
+        
 
     def print_board_altered(self, show_valid_placements=False, radius=5):
         print("print_board_altered : start")
@@ -924,7 +1011,9 @@ class QwirkleEnv(gym.Env):
 
         for i in range(0, len(lines)):
             i_display = str(i + y_start).zfill(2) if 0 < i < len(lines) - 1 else '  '
-            print(i_display, lines[i], i_display)
+            logger.debug(i_display, lines[i], i_display)
+            logger.debug(self.board)
+            # print(i_display, lines[i], i_display)
         print(f"\nThe tiles right now {self._tiles}\n ")
         print(f"self._plays: {self._plays}")
         print("print_board_altered : end")
@@ -937,7 +1026,7 @@ class QwirkleEnv(gym.Env):
         if self.done:
             logger.debug(f'GAME OVER')
         else:
-            logger.debug(f"It is Player {self.current_player_num}'s turn to move")
+            logger.debug(f"It is Player {self.current_player.id}'s turn to move")
         self.print_board_altered()
         self.print_tiles(self._tiles)
         print("\n")       
