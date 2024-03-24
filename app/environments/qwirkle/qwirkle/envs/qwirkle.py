@@ -58,7 +58,6 @@ class Piece:
 
 class Player():
     def __init__(self, id, _tiles):
-    def __init__(self, id, _tiles):
         self.id = id
         self.score = 0
         self._tiles = _tiles
@@ -188,15 +187,6 @@ class QwirkleEnv(gym.Env):
     
 
     # step 3 of conversion: add the pick tiles function
-    def pick_tiles_player_specific(self, bag_of_tiles):
-        rnd = Random()
-        _tiles = []
-        while len(_tiles) < 6 and len(bag_of_tiles) > 0:
-            i = rnd.randint(0, len(bag_of_tiles) - 1)
-
-            _tiles.append(bag_of_tiles.pop(i))    
-        return _tiles    
-
     def pick_tiles_player_specific(self, bag_of_tiles):
         rnd = Random()
         _tiles = []
