@@ -963,7 +963,7 @@ class QwirkleEnv(gym.Env):
             tiles_output += colored(tile.shape, tile.color) + ' '
         # logger.debug('\n  Your Tiles: %s' % tiles_output)
         # logger.debug('              1 2 3 4 5 6\n')
-        logger.debug(f"tiles: {tiles}")
+        # logger.debug(f"tiles: {tiles}")
         
 
     def print_board_altered(self, show_valid_placements=False, radius=5):
