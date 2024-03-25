@@ -52,6 +52,7 @@ class QwirkleEnv(gym.Env):
     def __init__(self, verbose = False, manual = False):
         # logger.debug("__init__: begining")
         super(QwirkleEnv, self).__init__()
+
         self.name = 'qwirkle'
         self.manual = manual
         self.n_tiles = 6
@@ -62,6 +63,9 @@ class QwirkleEnv(gym.Env):
         # self.done = False
         self.counter = 0
 
+        self.look_up_float_to_piece = {}
+        self.look_up_dict = {}
+
         # Initialize the bag of tiles going through each color
         # Step 2 of conversion, _bag_of_tiles, has been implemented and changed
         self._bag_of_tiles = []
@@ -71,38 +75,62 @@ class QwirkleEnv(gym.Env):
         self.grid_length = 30
         self.num_squares = self.grid_length * self.grid_length
         self.grid_shape = (self.grid_length, self.grid_length)
-        # Instansiate players
-        # self.players = [Player('1', self.pick_tiles_player_specific(self._bag_of_tiles)), Player('2', self.pick_tiles_player_specific(self._bag_of_tiles))]
-        # self.current_player = self.player1
 
-        # self._tiles = self.current_player._tiles
-        # self.pick_tiles(self._bag_of_tiles)
-        # self.current_player._tiles = self._tiles
-        # Instansiate players
-        # self.players = [Player('1', self.pick_tiles_player_specific(self._bag_of_tiles)), Player('2', self.pick_tiles_player_specific(self._bag_of_tiles))]
-        # self.current_player = self.player1
-        
-
-        # self.pick_tiles(self._bag_of_tiles)
-        # self.current_player._tiles = self._tiles
-        # print(len(self.bag_of_tiles))
-        # This board is purly numeric.
+        # The boards
         self.board = np.zeros((self.grid_length, self.grid_length), dtype=np.float32)
-
-        # Initialize the players' hands
-        # self.player_hands = [self.draw_tiles(self.n_tiles) for i in range(self.n_players)]
-        # Initialize the board
-        # 12 has been gotten rid of as, the only thing on the board would be an integer mapped from the tile to the class. 
-
-
-        # This board is aligned with what the other source code have. 
         self._board = [[None] * self.grid_length for i in range(self.grid_length)]
+        
+        # It is (x,y) i.e. (column, row)
+        self._cooridnates = [(16, 6), (16, 7), (14, 8), (15, 8), (16, 8), (17, 8), (18, 8), (19, 8), (16, 9), (16, 10), (16, 11)]
+        self._values = [-0.45, -0.55, -0.45, -0.5, -0.4, -0.35, -0.6, -0.55, -0.5, -0.35, -0.6]
+        
+        for value, coordinate in enumerate(self._cooridnates):
+            # self.board[y][x], 
+            self.board[coordinate[1]][coordinate[0]] = self._values[value]
+            self._board[coordinate[1]][coordinate[0]] = self.float_to_piece_converter(float(self._values[value]))
+
+
+        
+        print(self._board)
+        # print(self.float_to_piece_converter(-0.6))
+        self._hand_pick_specific_tiles()
 
         # have this flag just to change it to false later on after the first tile is put down
         self.flag_is_board_empty = True
 
         # It is like a history of plays, in the game this can happen more than once in one round. 
         self._plays = []       
+
+    def _hand_pick_specific_tiles(self):
+        # print(type(self._tile[0]))
+        # print(type(self._bag_of_tiles[0]))
+        # print(self._tile)
+
+        shapes = [
+            SHAPES.CIRCLE,
+            SHAPES.DIAMOND,
+            SHAPES.SPARKLE,
+            SHAPES.SQUARE,
+            SHAPES.STAR,
+            SHAPES.TRIANGLE
+        ]
+
+        colors = [
+            COLORS.BLUE,
+            COLORS.CYAN,
+            COLORS.GREEN,
+            COLORS.MAGENTA,
+            COLORS.RED,
+            COLORS.YELLOW
+        ]
+        self._tiles = [Piece(color=colors[0], shape=shapes[0]), Piece(color=colors[3], shape= shapes[0]), Piece(color=colors[4], shape= shapes[4]), Piece(color=colors[2], shape= shapes[4]), Piece(color=colors[3], shape= shapes[0]), Piece(color=colors[3], shape= shapes[2])]
+        for tile in self._tiles:
+            for i, bag_tile in enumerate(self._bag_of_tiles):
+                if bag_tile.color == tile.color and bag_tile.shape == tile.shape:
+                    self._bag_of_tiles.pop(i)
+                    break
+        print(f"self._tiles: {self._tiles}")  
+        print(f"len of _bag_of_tiles {len(self._bag_of_tiles)}")      
 
     def _generate_new_bag_of_tiles(self):
         self._bag_of_tiles = []
@@ -129,21 +157,100 @@ class QwirkleEnv(gym.Env):
         for i in range(3):
             for c in range(len(colors)):
                 for s in range(len(shapes)):
-                    self._bag_of_tiles.append(Piece(color=colors[c], shape=shapes[s]))    
+                        self._bag_of_tiles.append(Piece(color=colors[c], shape=shapes[s]))    
         # [blue ●, magenta ●, red ★, green ★, magenta ●, magenta ❈]
-        self._tile = [Piece(color=colors[0], shape=shapes[0]), Piece(color=colors[3], shape= shapes[0]), Piece(color=colors[4], shape= shapes[4]), Piece(color=colors[2], shape= shapes[4]), Piece(color=colors[3], shape= shapes[0]), Piece(color=colors[3], shape= shapes[2])]
-        print(self._tile)
-        for i in self._tile:
-            self._bag_of_tiles.remove(i)
-    # # step 3 of conversion: add the pick tiles function
-    # def pick_tiles_player_specific(self, bag_of_tiles):
-    #     rnd = Random()
-    #     _tiles = []
-    #     while len(_tiles) < 6 and len(bag_of_tiles) > 0:
-    #         i = rnd.randint(0, len(bag_of_tiles) - 1)
 
-    #         _tiles.append(bag_of_tiles.pop(i))    
-    #     return _tiles    
+    def float_to_piece_converter(self, _float):
+        if len(self.look_up_float_to_piece) == 36:
+            float_in_piece = self.look_up_float_to_piece[_float]
+            # print(f"self.look_up_float_to_piece: {self.look_up_float_to_piece}")
+            return float_in_piece
+        else:
+            float_auxilary = -0.90
+            counter = 0
+            shapes = [
+                SHAPES.CIRCLE,
+                SHAPES.DIAMOND,
+                SHAPES.SPARKLE,
+                SHAPES.SQUARE,
+                SHAPES.STAR,
+                SHAPES.TRIANGLE
+            ]
+
+            colors = [
+                COLORS.BLUE,
+                COLORS.CYAN,
+                COLORS.GREEN,
+                COLORS.MAGENTA,
+                COLORS.RED,
+                COLORS.YELLOW
+            ]
+
+            for c in range(len(colors)):
+                for s in range(len(shapes)):
+                    zero_check = round(float_auxilary + (counter * 0.05), 2)
+                    if zero_check == 0:
+                        zero_check = round(zero_check + 0.05, 2)
+                        counter += 1
+                    self.look_up_float_to_piece[zero_check] = Piece(color=colors[c], shape=shapes[s])
+                    counter += 1
+            # print(self.look_up_float_to_piece)
+        
+            # # print(look_up_float_to_piece)
+            # # print(type(piece))
+            # # Assuming 'look_up_float_to_piece' is your dictionary
+            # first_key = next(iter(look_up_float_to_piece))
+            # print(type(first_key))
+            float_in_piece = self.look_up_float_to_piece[_float]
+            # print(f"self.look_up_float_to_piece: {self.look_up_float_to_piece}")
+            return float_in_piece
+
+    def piece_to_float_converter(self, piece):
+        piece = str(piece)
+        if len(self.look_up_dict) == 36:
+            piece_in_float = self.look_up_dict[piece]
+            print(f"self.look_up_dict: {self.look_up_dict}")
+            return piece_in_float
+        else:
+            float_auxilary = -0.90
+            counter = 0
+            shapes = [
+                SHAPES.CIRCLE,
+                SHAPES.DIAMOND,
+                SHAPES.SPARKLE,
+                SHAPES.SQUARE,
+                SHAPES.STAR,
+                SHAPES.TRIANGLE
+            ]
+
+            colors = [
+                COLORS.BLUE,
+                COLORS.CYAN,
+                COLORS.GREEN,
+                COLORS.MAGENTA,
+                COLORS.RED,
+                COLORS.YELLOW
+            ]
+
+            for c in range(len(colors)):
+                for s in range(len(shapes)):
+                    zero_check = round(float_auxilary + (counter * 0.05), 2)
+                    if zero_check == 0:
+                        zero_check = round(zero_check + 0.05, 2)
+                        counter += 1
+                    self.look_up_dict[str(Piece(color=colors[c], shape=shapes[s]))] = zero_check
+                    counter += 1
+            # print(self.look_up_dict)
+        
+            # # print(look_up_dict)
+            # # print(type(piece))
+            # # Assuming 'look_up_dict' is your dictionary
+            # first_key = next(iter(look_up_dict))
+            # print(type(first_key))
+            piece_in_float = self.look_up_dict[str(piece)]
+            print(f"self.look_up_dict: {self.look_up_dict}")
+            return piece_in_float
+ 
 
     def pick_tiles(self, bag_of_tiles):
         rnd = Random()
@@ -394,5 +501,6 @@ class QwirkleEnv(gym.Env):
 def test():
     qwirkle = QwirkleEnv()
     legal_actions = qwirkle.legal_actions()
+    return legal_actions
     
 test()
