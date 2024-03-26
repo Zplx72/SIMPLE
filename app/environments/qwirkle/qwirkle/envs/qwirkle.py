@@ -1024,7 +1024,7 @@ class QwirkleEnv(gym.Env):
         logger.debug("def print_tiles(), end")
         
 
-    def print_board_altered(self, show_valid_placements=False, radius=5):
+    def print_board_altered(self, show_valid_placements=False, radius=15):
         logger.debug("  def print_board_altered, start:")
         if len(self._plays_whole_round) == 0:
             print('     The board is empty.')
