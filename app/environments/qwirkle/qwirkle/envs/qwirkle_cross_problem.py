@@ -122,10 +122,7 @@ class QwirkleEnv(gym.Env):
         self.grid_length = 30
         self.num_squares = self.grid_length * self.grid_length
         self.grid_shape = (self.grid_length, self.grid_length)
-
-        self.shapes = [SHAPES.CIRCLE, SHAPES.DIAMOND, SHAPES.SPARKLE, SHAPES.SQUARE, SHAPES.STAR, SHAPES.TRIANGLE]
-        self.colors = [COLORS.BLUE, COLORS.CYAN, COLORS.GREEN, COLORS.MAGENTA, COLORS.RED, COLORS.YELLOW]
-
+    
         # Initialize the board
         # 12 has been gotten rid of as, the only thing on the board would be an integer mapped from the tile to the class. 
 
@@ -152,7 +149,6 @@ class QwirkleEnv(gym.Env):
         # gym.spaces.MultiBinary((self.grid_length, self.grid_length))  # The board is grid_length x grid_length
         # Introduce the tile you are placing
         self.look_up_dict = {}
-        self.look_up_float_to_piece = {}
 
         # For a game like Tic Tac Toe, the observation space might be a 3x3 grid
         # where each cell can be in one of three states (empty, occupied by player 1, or occupied by player 2)
@@ -176,10 +172,29 @@ class QwirkleEnv(gym.Env):
     # Step 2 of conversion, _bag_of_tiles, has been implemented and changed continued. 
     def _generate_new_bag_of_tiles(self):
         self._bag_of_tiles = []
+
+        shapes = [
+            SHAPES.CIRCLE,
+            SHAPES.DIAMOND,
+            SHAPES.SPARKLE,
+            SHAPES.SQUARE,
+            SHAPES.STAR,
+            SHAPES.TRIANGLE
+        ]
+
+        colors = [
+            COLORS.BLUE,
+            COLORS.CYAN,
+            COLORS.GREEN,
+            COLORS.MAGENTA,
+            COLORS.RED,
+            COLORS.YELLOW
+        ]
+
         for i in range(3):
-            for c in range(len(self.colors)):
-                for s in range(len(self.shapes)):
-                    self._bag_of_tiles.append(Piece(color=self.colors[c], shape=self.shapes[s]))    
+            for c in range(len(colors)):
+                for s in range(len(shapes)):
+                    self._bag_of_tiles.append(Piece(color=colors[c], shape=shapes[s]))    
     
 
     # step 3 of conversion: add the pick tiles function
@@ -191,15 +206,6 @@ class QwirkleEnv(gym.Env):
 
             _tiles.append(bag_of_tiles.pop(i))    
         return _tiles    
-            
-    def _hand_pick_specific_tiles(self, bag_of_tiles):
-        _tiles = [Piece(color=self.colors[0], shape=self.shapes[0]), Piece(color=self.colors[3], shape= self.shapes[0]), Piece(color=self.colors[4], shape= self.shapes[4]), Piece(color=self.colors[2], shape= self.shapes[4]), Piece(color=self.colors[3], shape= self.shapes[0]), Piece(color=self.colors[3], shape= self.shapes[2])]
-        for tile in _tiles:
-            for i, bag_tile in enumerate(bag_of_tiles):
-                if bag_tile.color == tile.color and bag_tile.shape == tile.shape:
-                    bag_of_tiles.pop(i)
-                    break
-        return _tiles
 
     def pick_tiles(self, bag_of_tiles):
         rnd = Random()
@@ -223,13 +229,31 @@ class QwirkleEnv(gym.Env):
         else:
             float_auxilary = -0.90
             counter = 0
-            for c in range(len(self.colors)):
-                for s in range(len(self.shapes)):
+            shapes = [
+                SHAPES.CIRCLE,
+                SHAPES.DIAMOND,
+                SHAPES.SPARKLE,
+                SHAPES.SQUARE,
+                SHAPES.STAR,
+                SHAPES.TRIANGLE
+            ]
+
+            colors = [
+                COLORS.BLUE,
+                COLORS.CYAN,
+                COLORS.GREEN,
+                COLORS.MAGENTA,
+                COLORS.RED,
+                COLORS.YELLOW
+            ]
+
+            for c in range(len(colors)):
+                for s in range(len(shapes)):
                     zero_check = round(float_auxilary + (counter * 0.05), 2)
                     if zero_check == 0:
                         zero_check = round(zero_check + 0.05, 2)
                         counter += 1
-                    self.look_up_dict[str(Piece(color=self.colors[c], shape=self.shapes[s]))] = zero_check
+                    self.look_up_dict[str(Piece(color=colors[c], shape=shapes[s]))] = zero_check
                     counter += 1
             # print(self.look_up_dict)
         
@@ -241,25 +265,6 @@ class QwirkleEnv(gym.Env):
             piece_in_float = self.look_up_dict[str(piece)]
             return piece_in_float
 
-    def float_to_piece_converter(self, _float):
-        if len(self.look_up_float_to_piece) == 36:
-            float_in_piece = self.look_up_float_to_piece[_float]
-            # print(f"self.look_up_float_to_piece: {self.look_up_float_to_piece}")
-            return float_in_piece
-        else:
-            float_auxilary = -0.90
-            counter = 0
-            for c in range(len(self.colors)):
-                for s in range(len(self.shapes)):
-                    zero_check = round(float_auxilary + (counter * 0.05), 2)
-                    if zero_check == 0:
-                        zero_check = round(zero_check + 0.05, 2)
-                        counter += 1
-                    self.look_up_float_to_piece[zero_check] = Piece(color=self.colors[c], shape=self.shapes[s])
-                    counter += 1
-            float_in_piece = self.look_up_float_to_piece[_float]
-            # print(f"self.look_up_float_to_piece: {self.look_up_float_to_piece}")
-            return float_in_piece
 
     # NEW: I only need tot store the action and the state, I need to call over the other game.  
     #If there are tiles left in the bag, it randomly selects one, removes it from the bag, and adds it to 
@@ -386,8 +391,6 @@ class QwirkleEnv(gym.Env):
                 else:
                     legal_actions.append(0)
             
-            num_ones = np.count_nonzero(legal_actions == 1)
-            logger.debug(f"Number of ones {num_ones}")
             # Regardless of whether it will be all zeros or not I will need to append a zero at the end.
             # Just for the dimensions to make sense.
             legal_actions.append(0)
@@ -887,36 +890,22 @@ class QwirkleEnv(gym.Env):
         self._generate_new_bag_of_tiles()
 
         # Instansiate players
-        self.players = [Player('1', self._hand_pick_specific_tiles(self._bag_of_tiles)), Player('2', self.pick_tiles_player_specific(self._bag_of_tiles))]
+        self.players = [Player('1', self.pick_tiles_player_specific(self._bag_of_tiles)), Player('2', self.pick_tiles_player_specific(self._bag_of_tiles))]
         # self.current_player = self.player1
 
         self._tiles = self.current_player._tiles
         # self.pick_tiles(self._bag_of_tiles)
         # self.current_player._tiles = self._tiles
+        # Instansiate players
+        self.players = [Player('1', self.pick_tiles_player_specific(self._bag_of_tiles)), Player('2', self.pick_tiles_player_specific(self._bag_of_tiles))]
+        # self.current_player = self.player1
+
+        self._tiles = self.current_player._tiles
         # self.pick_tiles(self._bag_of_tiles)
         # self.current_player._tiles = self._tiles
         # print(len(self.bag_of_tiles))
         # This board is purly numeric.
         self.board = np.zeros((self.grid_length, self.grid_length), dtype=np.float32)
-
-        # This board is aligned with what the other source code have. 
-        self._board = [[None] * self.grid_length for i in range(self.grid_length)]
-
-
-        # It is (x,y) i.e. (column, row)
-        self._cooridnates = [(16, 6), (16, 7), (14, 8), (15, 8), (16, 8), (17, 8), (18, 8), (19, 8), (16, 9), (16, 10), (16, 11)]
-        self._values = [-0.45, -0.55, -0.45, -0.5, -0.4, -0.35, -0.6, -0.55, -0.5, -0.35, -0.6]
-
-        # Putting the tiles on the board
-        for value, coordinate in enumerate(self._cooridnates):
-            # self.board[y][x], 
-            float_to_piece_rep = self.float_to_piece_converter(float(self._values[value]))
-            for i, bag_tile in enumerate(self._bag_of_tiles):
-                if bag_tile.color == float_to_piece_rep.color and bag_tile.shape == float_to_piece_rep.shape:
-                    self._bag_of_tiles.pop(i)
-                    break
-            self.board[coordinate[1]][coordinate[0]] = self._values[value]
-            self._board[coordinate[1]][coordinate[0]] = float_to_piece_rep
 
         # Initialize the players' hands
         # self.player_hands = [self.draw_tiles(self.n_tiles) for i in range(self.n_players)]
@@ -924,6 +913,8 @@ class QwirkleEnv(gym.Env):
         # 12 has been gotten rid of as, the only thing on the board would be an integer mapped from the tile to the class. 
 
 
+        # This board is aligned with what the other source code have. 
+        self._board = [[None] * self.grid_length for i in range(self.grid_length)]
 
         # have this flag just to change it to false later on after the first tile is put down
         self.flag_is_board_empty = True

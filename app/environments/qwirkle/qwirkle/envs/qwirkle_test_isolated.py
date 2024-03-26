@@ -96,8 +96,13 @@ class QwirkleEnv(gym.Env):
         
         for value, coordinate in enumerate(self._cooridnates):
             # self.board[y][x], 
+            float_to_piece_rep = self.float_to_piece_converter(float(self._values[value]))
+            for i, bag_tile in enumerate(self._bag_of_tiles):
+                if bag_tile.color == float_to_piece_rep.color and bag_tile.shape == float_to_piece_rep.shape:
+                    self._bag_of_tiles.pop(i)
+                    break
             self.board[coordinate[1]][coordinate[0]] = self._values[value]
-            self._board[coordinate[1]][coordinate[0]] = self.float_to_piece_converter(float(self._values[value]))
+            self._board[coordinate[1]][coordinate[0]] = float_to_piece_rep
 
 
         # Get the predetermined tiles. 
@@ -198,7 +203,7 @@ class QwirkleEnv(gym.Env):
         # Make sure the placement is not already taken
         if self._board[y][x] is not None:
             return False
-        logger.log("is not occupied")
+        logger.debug("is not occupied")
         # Make sure the placement has at least one adjacent placement
         adjacent_checks = []
         if y - 1 >= 0:
