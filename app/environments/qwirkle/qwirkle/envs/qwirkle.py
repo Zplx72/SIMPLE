@@ -372,6 +372,7 @@ class QwirkleEnv(gym.Env):
             # logger.debug(self.board)
 
             # logger.debug(self._board) 
+            logger.debug(f" self._tiles {self._tiles}")
             for i in range(0, self.grid_length*self.grid_length*self.n_tiles):
                 
                 # Decode the aciton and check wetheer the action is valid.
