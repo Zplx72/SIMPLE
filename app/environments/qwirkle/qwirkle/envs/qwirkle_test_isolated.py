@@ -198,7 +198,7 @@ class QwirkleEnv(gym.Env):
         # Make sure the placement is not already taken
         if self._board[y][x] is not None:
             return False
-        # logger.log("is not occupied")
+        logger.log("is not occupied")
         # Make sure the placement has at least one adjacent placement
         adjacent_checks = []
         if y - 1 >= 0:
@@ -240,7 +240,7 @@ class QwirkleEnv(gym.Env):
                     t_x += 1
                     if (t_x, y) in plays:
                         in_plays = True
-
+            logger.debug(f"check horizontal done, in_plays : {in_plays}") 
             if check_vertical:
                 t_y = y
                 while t_y - 1 >= 0 and self._board[t_y - 1][x] is not None:
@@ -253,7 +253,7 @@ class QwirkleEnv(gym.Env):
                     t_y += 1
                     if (x, t_y) in plays:
                         in_plays = True
-
+            logger.debug(f"check vertical done, in_plays : {in_plays}")
             if not in_plays:
                 return False
 
@@ -265,6 +265,7 @@ class QwirkleEnv(gym.Env):
         # print(f"before rows for {piece}")
         # Get & Verify all the tiles adjacent horizontally
         row = [piece]
+        logger.debug(f"{row} before the row check row check")
         t_x = x + 1
         while t_x < len(self._board[0]) and self._board[y][t_x] is not None:
             row.append(self._board[y][t_x])
@@ -281,6 +282,7 @@ class QwirkleEnv(gym.Env):
         # print(f"after rows for {piece}")
         # Get & Verify all the tiles adjacent vertically
         row = [piece]
+        logger.debug(f"{row} before the row check row check")
         t_y = y + 1
         while t_y < len(self._board) and self._board[t_y][x] is not None:
             row.append(self._board[t_y][x])
@@ -306,7 +308,9 @@ class QwirkleEnv(gym.Env):
            Otherwise the row is invalid."""
 
         if len(row) == 1:
+            logger.debug(f"inside _is_row_valid len(row) {len(row)}, True return")
             return True
+        logger.debug(f"inside _is_row_valid len(row) {len(row)}")
         # print(f"before same colour check for {row[0]}")
         if all(row[i].color == row[0].color for i in range(len(row))):
             shapes = []
@@ -438,5 +442,9 @@ def test():
     qwirkle = QwirkleEnv()
     qwirkle.legal_actions()
     # return legal_actions
-    
+    logger.debug(f"The tiles {qwirkle._tiles}")
+    logger.debug(f"The numerical board's length {len(qwirkle._board)}{qwirkle._board}")
+    logger.debug(f"The actual board {len(qwirkle.board)} {qwirkle.board}")
+    logger.debug(f"_bag_of_tiles {qwirkle._bag_of_tiles}")
+    logger.debug(f"_bag_of_tiles {len(qwirkle._bag_of_tiles)}")
 test()

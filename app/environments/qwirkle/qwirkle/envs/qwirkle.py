@@ -7,9 +7,20 @@ import gym
 import numpy as np
 import random
 from termcolor import colored
+#importing the module 
+import logging 
 
+#now we will Create and configure logger 
+logging.basicConfig(filename="std1.log", format='%(asctime)s %(message)s', filemode='w') 
+
+#Let us Create an object 
+logger=logging.getLogger() 
+
+#Now we are going to Set the threshold of logger to DEBUG 
+logger.setLevel(logging.DEBUG) 
 
 from stable_baselines import logger
+
 
 # colours = ['red', 'orange', 'yellow', 'green', 'blue', 'purple']
 # shapes = ['circle', 'square', 'diamond', 'clover', 'star', 'cross']
@@ -244,7 +255,7 @@ class QwirkleEnv(gym.Env):
                         counter += 1
                     self.look_up_dict[str(Piece(color=colors[c], shape=shapes[s]))] = zero_check
                     counter += 1
-            print(self.look_up_dict)
+            # print(self.look_up_dict)
         
             # # print(look_up_dict)
             # # print(type(piece))
@@ -361,13 +372,16 @@ class QwirkleEnv(gym.Env):
         while True:
             legal_actions = []
             checked_actions = set()
-            # Go through all the possible actions. 
+            # Go through all the possible actions.
+            logger.debug(self.board)
+
+            logger.debug(self._board) 
             for i in range(0, self.grid_length*self.grid_length*self.n_tiles):
                 
                 # Decode the aciton and check wetheer the action is valid.
                 tile_index, col, _row = self.action_to_indices(i)
                 checked_actions.add((tile_index, col, _row))
-                logger.log(f"Checking position ({_row}, {col}) for shape: {self._tiles[tile_index]}")
+                logger.debug(f"Checking position ({col}, {_row}) for shape: {self._tiles[tile_index]}")
                 # print(f"From the legal actions function: self._tiles {self._tiles}")
                 bool_valid_play = self._is_play_valid(piece=self._tiles[tile_index], x = col, y = _row)
 
@@ -387,25 +401,27 @@ class QwirkleEnv(gym.Env):
                 self.swap_tiles()
                 # print(f"self._tiles after swapping: {self._tiles}")
                 self.print_tiles(self._tiles)
-                print(f"\nThis is the if part of the while loop: flag_board_zero_check: {self.flag_board_zero_check} and is all legal_actions zero ? {np.all(np.array(legal_actions) == 0)}\n")
+                # print(f"\nThis is the if part of the while loop: flag_board_zero_check: {self.flag_board_zero_check} and is all legal_actions zero ? {np.all(np.array(legal_actions) == 0)}\n")
+                logger.debug(f"\nThis is the if part of the while loop: flag_board_zero_check: {self.flag_board_zero_check} and is all legal_actions zero ? {np.all(np.array(legal_actions) == 0)}\n")
             else:
-                print(f"\nThis is the else part of the while loop: flag_board_zero_check: {self.flag_board_zero_check} and is all legal_actions zero ? {np.all(np.array(legal_actions) == 0)}\n")
+                logger.debug(f"\nThis is the else part of the while loop: flag_board_zero_check: {self.flag_board_zero_check} and is all legal_actions zero ? {np.all(np.array(legal_actions) == 0)}\n")
                 # self.flag_board_zero_check = True
                 break            
             
             # This if statment checks if the tile has already been swapped and still there is no legal_actions then it will return a numpy array that only the last element is a legal action for it.
             # This will help 
-        print(f"All actions checked? {len(checked_actions) == n_combinations}")
+        # print(f"All actions checked? {len(checked_actions) == n_combinations}")
+        logger.debug(f"All actions checked? {len(checked_actions) == n_combinations}")
         if (self.flag_board_zero_check == False) and  np.all(np.array(legal_actions) == 0):
             only_skipping_is_legal = np.zeros((self.grid_length*self.grid_length*self.n_tiles + 1), np.float32)
             only_skipping_is_legal[self.grid_length*self.grid_length*self.n_tiles] = 1
             self.flag_board_zero_check = True
-            print(f"only_skipping_is_legal the length: {len(only_skipping_is_legal)}")
-            print(f"only_skipping_is_legal last elements:  {only_skipping_is_legal[-1]}\n")
+            # print(f"only_skipping_is_legal the length: {len(only_skipping_is_legal)}")
+            # print(f"only_skipping_is_legal last elements:  {only_skipping_is_legal[-1]}\n")
             return only_skipping_is_legal
 
 
-        print(f"Is legal_actions all zeros? {np.all(np.array(legal_actions) == 0)}")
+        logger.debug(f"Is legal_actions all zeros? {np.all(np.array(legal_actions) == 0)}")
         # print(legal_actions)
         return np.array(legal_actions)
     
@@ -606,11 +622,11 @@ class QwirkleEnv(gym.Env):
             return False
         if x == len(self._board[0]) - 1 and y == 0:
             return False
-        logger.log("passes position check")
+        logger.debug("passes position check")
         # Make sure the placement is not already taken
         if self._board[y][x] is not None:
             return False
-        logger.log("is not occupied")
+        logger.debug("is not occupied")
         # Make sure the placement has at least one adjacent placement
         adjacent_checks = []
         if y - 1 >= 0:
@@ -625,7 +641,7 @@ class QwirkleEnv(gym.Env):
         if all(adjacent_checks):
             return False
 
-        logger.log("Has adjacent tile")
+        logger.debug("Has adjacent tile")
         # print(f"Before play for {piece}")
         # Validate the play connects to an existing play
         plays = [(play[0], play[1]) for play in self._plays]
@@ -652,7 +668,7 @@ class QwirkleEnv(gym.Env):
                     t_x += 1
                     if (t_x, y) in plays:
                         in_plays = True
-
+            logger.debug(f"check horizontal done, in_plays : {in_plays}")
             if check_vertical:
                 t_y = y
                 while t_y - 1 >= 0 and self._board[t_y - 1][x] is not None:
@@ -665,7 +681,7 @@ class QwirkleEnv(gym.Env):
                     t_y += 1
                     if (x, t_y) in plays:
                         in_plays = True
-
+            logger.debug(f"check vertical done, in_plays : {in_plays}")
             if not in_plays:
                 return False
 
@@ -677,6 +693,7 @@ class QwirkleEnv(gym.Env):
         # print(f"before rows for {piece}")
         # Get & Verify all the tiles adjacent horizontally
         row = [piece]
+        logger.debug(f"{row} before the row check row check")
         t_x = x + 1
         while t_x < len(self._board[0]) and self._board[y][t_x] is not None:
             row.append(self._board[y][t_x])
@@ -689,10 +706,11 @@ class QwirkleEnv(gym.Env):
 
         if not self._is_row_valid(row):
             return False
-        logger.log(f"{row}, passed row check")
+        logger.debug(f"{row}, passed row check")
         # print(f"after rows for {piece}")
         # Get & Verify all the tiles adjacent vertically
         row = [piece]
+        logger.debug(f"{row} before the row check row check")
         t_y = y + 1
         while t_y < len(self._board) and self._board[t_y][x] is not None:
             row.append(self._board[t_y][x])
@@ -708,7 +726,7 @@ class QwirkleEnv(gym.Env):
         if not self._is_row_valid(row):
             return False
         
-        logger.log(f"passed column check {row}")
+        logger.debug(f"passed column check {row}")
         # print(f"after columns for {piece}")
         return True
 
@@ -716,9 +734,11 @@ class QwirkleEnv(gym.Env):
         """If all row colors are equal, check each shape shows up at most once.
            If all shapes are equal, check each color shows up at most once.
            Otherwise the row is invalid."""
-
+        
         if len(row) == 1:
+            logger.debug(f"inside _is_row_valid len(row) {len(row)}, True return")
             return True
+        logger.debug(f"inside _is_row_valid len(row) {len(row)}")
         # print(f"before same colour check for {row[0]}")
         if all(row[i].color == row[0].color for i in range(len(row))):
             shapes = []
@@ -728,30 +748,32 @@ class QwirkleEnv(gym.Env):
                 shapes.append(row[i].shape)
             
             # print(f"after same colour check for {row[0]}")
+            logger.debug(f"after same colour check for {row[0]}")
             
         elif all(row[i].shape == row[0].shape for i in range(len(row))):
-            print(F"before same shape for {row[0]}")
+            logger.debug(F"before same shape for {row[0]}")
             colors = []
             for i in range(len(row)):
                 if row[i].color in colors:
                     return False
                 colors.append(row[i].color)
-            # print(f"after same shape for {row[0]}")
+            logger.debug(f"after same shape for {row[0]}")
         else:
-            # print(f"Else: {row}")
+            logger.debug(f"Else: {row}")
             return False
 
         return True
 
 
     def step(self, action):
-        print(f"step: start")
+        logger.debug(f"step: start")
         # once it took an action what would you do with that just say if it is a good idea or not. 
         # you don't need tunrs_taken. 
         # consider normalising the reward. 
         reward = [0,0]
         tile_index, col, _row = self.action_to_indices(action)
-        print(f"action: {action}")
+        # print(f"action: {action}")
+        logger.debug(f"action: {action}")
 
         # This is the first if statement to check whether the action is to skip or not:
         if action == (self.grid_length * self.grid_length * self.n_tiles):
@@ -901,7 +923,6 @@ class QwirkleEnv(gym.Env):
         self._plays = []
         print("reset : end")
         logger.debug(f'\n\n---- NEW GAME ----')
-        logger.debug(f'\n\n---- NEW GAME ----')
         return self.observation
  
     # # Dependent on how you define the board and how to reset this.
@@ -999,14 +1020,16 @@ class QwirkleEnv(gym.Env):
         lines.insert(0, line)
         lines.append(line)
 
+
         for i in range(0, len(lines)):
             i_display = str(i + y_start).zfill(2) if 0 < i < len(lines) - 1 else '  '
             logger.debug(i_display, lines[i], i_display)
-            logger.debug(self.board)
+        logger.debug(self.board)
+        logger.debug(self._board)
             # print(i_display, lines[i], i_display)
-        print(f"\nThe tiles right now {self._tiles}\n ")
-        print(f"self._plays: {self._plays}")
-        print("print_board_altered : end")
+        logger.debug(f"\nThe tiles right now {self._tiles}\n ")
+        logger.debug(f"self._plays: {self._plays}")
+        logger.debug("print_board_altered : end")
 
     ### HERE TO UNCOMMENT
     def render(self, mode='human', close=False, verbose = True):
