@@ -378,6 +378,11 @@ class QwirkleEnv(gym.Env):
                 # Decode the aciton and check wetheer the action is valid.
                 tile_index, col, _row = self.action_to_indices(i)
                 checked_actions.add((tile_index, col, _row))
+                if tile_index > (len(self._tiles) - 1):
+                    legal_actions.append(0)
+                    continue
+                    
+                
                 # logger.debug(f"Checking position ({col}, {_row}) for shape: {self._tiles[tile_index]}")
                 # print(f"From the legal actions function: self._tiles {self._tiles}")
                 bool_valid_play = self._is_play_valid(piece=self._tiles[tile_index], x = col, y = _row)
@@ -442,7 +447,12 @@ class QwirkleEnv(gym.Env):
         tile_state = []
         for i in self._tiles:
             tile_state.append(self.piece_to_float_converter(i))
+        while len(tile_state) < self.n_tiles:
+            tile_state.append(0)
+        logger.debug(f"tile_state: {tile_state}")
         tile_state = np.array(tile_state).flatten()
+
+        logger.debug(f"tile_state flattened: {tile_state}")
 
         # Compute the legal actions
         legal_actions = self.legal_actions.flatten()        
