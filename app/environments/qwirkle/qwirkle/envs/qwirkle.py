@@ -801,6 +801,11 @@ class QwirkleEnv(gym.Env):
             logger.debug(f" if statement to skip the turn")
             # Don't see the point to add anything else. as everything remains the same.
             self.done = self.check_game_over()
+            
+            self.current_player_num = (self.current_player_num + 1) % 2
+            logger.debug(f" About to switch players now current_player number{self.current_player.id} - ")
+            self._tiles = self.current_player._tiles
+            self._plays = []
             return self.observation, reward, self.done, {}
 
 
@@ -923,7 +928,7 @@ class QwirkleEnv(gym.Env):
         self._generate_new_bag_of_tiles()
 
         # Instansiate players
-        self.players = [Player('1', self._hand_pick_specific_tiles(self._bag_of_tiles)), Player('2', self.pick_tiles_player_specific(self._bag_of_tiles))]
+        self.players = [Player('1', self.pick_tiles_player_specific(self._bag_of_tiles)), Player('2', self.pick_tiles_player_specific(self._bag_of_tiles))]
         # self.current_player = self.player1
 
         self._tiles = self.current_player._tiles
@@ -939,20 +944,20 @@ class QwirkleEnv(gym.Env):
         self._board = [[None] * self.grid_length for i in range(self.grid_length)]
 
 
-        # It is (x,y) i.e. (column, row)
-        self._cooridnates = [(16, 6), (16, 7), (14, 8), (15, 8), (16, 8), (17, 8), (18, 8), (19, 8), (16, 9), (16, 10), (16, 11)]
-        self._values = [-0.45, -0.55, -0.45, -0.5, -0.4, -0.35, -0.6, -0.55, -0.5, -0.35, -0.6]
+        # # It is (x,y) i.e. (column, row)
+        # self._cooridnates = [(16, 6), (16, 7), (14, 8), (15, 8), (16, 8), (17, 8), (18, 8), (19, 8), (16, 9), (16, 10), (16, 11)]
+        # self._values = [-0.45, -0.55, -0.45, -0.5, -0.4, -0.35, -0.6, -0.55, -0.5, -0.35, -0.6]
 
-        # Putting the tiles on the board
-        for value, coordinate in enumerate(self._cooridnates):
-            # self.board[y][x], 
-            float_to_piece_rep = self.float_to_piece_converter(float(self._values[value]))
-            for i, bag_tile in enumerate(self._bag_of_tiles):
-                if bag_tile.color == float_to_piece_rep.color and bag_tile.shape == float_to_piece_rep.shape:
-                    self._bag_of_tiles.pop(i)
-                    break
-            self.board[coordinate[1]][coordinate[0]] = self._values[value]
-            self._board[coordinate[1]][coordinate[0]] = float_to_piece_rep
+        # # Putting the tiles on the board
+        # for value, coordinate in enumerate(self._cooridnates):
+        #     # self.board[y][x], 
+        #     float_to_piece_rep = self.float_to_piece_converter(float(self._values[value]))
+        #     for i, bag_tile in enumerate(self._bag_of_tiles):
+        #         if bag_tile.color == float_to_piece_rep.color and bag_tile.shape == float_to_piece_rep.shape:
+        #             self._bag_of_tiles.pop(i)
+        #             break
+        #     self.board[coordinate[1]][coordinate[0]] = self._values[value]
+        #     self._board[coordinate[1]][coordinate[0]] = float_to_piece_rep
 
         # Initialize the players' hands
         # self.player_hands = [self.draw_tiles(self.n_tiles) for i in range(self.n_players)]
@@ -962,7 +967,7 @@ class QwirkleEnv(gym.Env):
 
 
         # have this flag just to change it to false later on after the first tile is put down
-        self.flag_is_board_empty = False
+        self.flag_is_board_empty = True
 
         # It is like a history of plays, in the game this can happen more than once in one round. 
         self._plays = []
