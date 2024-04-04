@@ -69,13 +69,13 @@ class Piece:
 
 class Player():
     def __init__(self, id, _tiles):
-        print(f"class Player, __init__, start")
+        logger.debug(f"class Player, __init__, start")
         self.id = id
         self.score = 0
         self._tiles = _tiles
-        print(f"From player, self._tiles: {self._tiles}")
+        logger.debug(f"From player, self._tiles: {self._tiles}")
         # self.pick_tiles(self._bag_of_tiles)
-        print(f"class Player, __init__, end\n")       
+        logger.debug(f"class Player, __init__, end\n")       
 class Token():
     def __init__(self, symbol, number):
         self.number = number
@@ -806,6 +806,7 @@ class QwirkleEnv(gym.Env):
             logger.debug(f" About to switch players now current_player number{self.current_player.id} - ")
             self._tiles = self.current_player._tiles
             self._plays = []
+            logger.debug(f" def step() Stop:")
             return self.observation, reward, self.done, {}
 
 
@@ -902,7 +903,7 @@ class QwirkleEnv(gym.Env):
             self._plays = []
             # self.switch_player()
 
-        print(f"def step(): end\n")
+        logger.debug(f" def step() Stop:")
         return self.observation, reward, self.done, {}
     
     # Swtiches player at then end of the round
@@ -1096,8 +1097,10 @@ class QwirkleEnv(gym.Env):
             logger.debug(f' GAME OVER')
         else:
             logger.debug(f" It is Player {self.current_player.id}'s turn to move")
-        self.print_board_altered()
-        self.print_tiles(self._tiles)   
+
+        # Ignore these for training
+        # self.print_board_altered()
+        # self.print_tiles(self._tiles)   
         logger.debug("def render() end.\n")
 
             
