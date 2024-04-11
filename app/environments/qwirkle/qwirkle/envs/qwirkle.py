@@ -791,7 +791,7 @@ class QwirkleEnv(gym.Env):
         # once it took an action what would you do with that just say if it is a good idea or not. 
         # you don't need tunrs_taken. 
         # consider normalising the reward. 
-        reward = [0,0]
+        self.reward = [0,0]
         tile_index, col, _row = self.action_to_indices(action)
         # print(f"action: {action}")
         logger.debug(f" action: {action}")
@@ -807,7 +807,7 @@ class QwirkleEnv(gym.Env):
             self._tiles = self.current_player._tiles
             self._plays = []
             logger.debug(f" def step() Stop:")
-            return self.observation, reward, self.done, {}
+            return self.observation, self.reward, self.done, {}
 
 
         # the three funcitons will be written down here, checks will be done and if it is true then the "_board" will be updated
@@ -842,7 +842,7 @@ class QwirkleEnv(gym.Env):
 
             # score, reward and done.
             score = self.score()
-            reward[self.current_player_num] = score            
+            self.reward[self.current_player_num] = score            
             self.done = self.check_game_over()
             self._plays_whole_round.extend(self._plays)
             logger.debug(f"     self.plays {self._plays}")
@@ -853,8 +853,8 @@ class QwirkleEnv(gym.Env):
             logger.debug(f"     elif not bool_valid_play {not bool_valid_play}")
             self.counter += 1
             self.done = False
-            reward = [3, 3]
-            reward[self.current_player_num] = -3
+            self.reward = [3, 3]
+            self.reward[self.current_player_num] = -3
             self._plays_whole_round.extend(self._plays)
             logger.debug(f"     self.plays {self._plays}")
             logger.debug(f"     self.plays_whole_round {self._plays_whole_round}")
@@ -882,7 +882,7 @@ class QwirkleEnv(gym.Env):
             
             # figuring out some sort of a scoring system. 
             score = self.score()
-            reward[self.current_player_num] = score
+            self.reward[self.current_player_num] = score
 
             # check if the game is over after the action
             self.done = self.check_game_over()
@@ -904,7 +904,7 @@ class QwirkleEnv(gym.Env):
             # self.switch_player()
 
         logger.debug(f" def step() Stop:")
-        return self.observation, reward, self.done, {}
+        return self.observation, self.reward, self.done, {}
     
     # Swtiches player at then end of the round
     # It is used as a property so no need to be called, it will be called instantly 
@@ -915,6 +915,7 @@ class QwirkleEnv(gym.Env):
 
     def reset(self):
         logger.debug("def reset(), start: ")
+        self.reward = [0, 0]
         self.flag_board_zero_check = True
 
         self.current_player_num = 0
