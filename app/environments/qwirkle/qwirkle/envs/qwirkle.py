@@ -842,7 +842,9 @@ class QwirkleEnv(gym.Env):
 
             # score, reward and done.
             score = self.score()
-            self.reward[self.current_player_num] = score            
+            scalar = 175
+            norm_score = score / scalar
+            self.reward[self.current_player_num] = norm_score            
             self.done = self.check_game_over()
             self._plays_whole_round.extend(self._plays)
             logger.debug(f"     self.plays {self._plays}")
@@ -853,8 +855,8 @@ class QwirkleEnv(gym.Env):
             logger.debug(f"     elif not bool_valid_play {not bool_valid_play}")
             self.counter += 1
             self.done = False
-            self.reward = [3, 3]
-            self.reward[self.current_player_num] = -3
+            self.reward = [1, 1]
+            self.reward[self.current_player_num] = -1
             self._plays_whole_round.extend(self._plays)
             logger.debug(f"     self.plays {self._plays}")
             logger.debug(f"     self.plays_whole_round {self._plays_whole_round}")
@@ -882,7 +884,9 @@ class QwirkleEnv(gym.Env):
             
             # figuring out some sort of a scoring system. 
             score = self.score()
-            self.reward[self.current_player_num] = score
+            scalar = 175
+            norm_score = score / scalar
+            self.reward[self.current_player_num] = norm_score
 
             # check if the game is over after the action
             self.done = self.check_game_over()
