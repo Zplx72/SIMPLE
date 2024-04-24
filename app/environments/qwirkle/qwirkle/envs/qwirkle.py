@@ -30,9 +30,9 @@ class COLORS:
     RED = 'red'
     YELLOW = 'yellow'
     GREEN = 'green'
-    CYAN = 'cyan'
-    MAGENTA = 'magenta'
-    BLUE = 'blue'
+    # CYAN = 'cyan'
+    # MAGENTA = 'magenta'
+    # BLUE = 'blue'
 
 
 class SHAPES:
@@ -45,9 +45,9 @@ class SHAPES:
     TRIANGLE = '▲'
     DIAMOND = '◆'
     SQUARE = '■'
-    CIRCLE = '●'
-    STAR = '★'
-    SPARKLE = '❈'
+    # CIRCLE = '●'
+    # STAR = '★'
+    # SPARKLE = '❈'
 
 
 class Piece:
@@ -99,7 +99,7 @@ class QwirkleEnv(gym.Env):
         # color_to_dimesion 
         # self.colours = ['red', 'orange', 'yellow', 'green', 'blue', 'purple']
         # self.shapes = ['circle', 'square', 'diamond', 'clover', 'star', 'cross']
-        self.n_tiles = 6
+        self.n_tiles = 3
         self.n_players = 2
         # self.current_player_num = 1
         # self.current_player_num = 1
@@ -117,12 +117,12 @@ class QwirkleEnv(gym.Env):
         # # self.player_hands = [self.draw_tiles(self.n_tiles) for i in range(self.n_players)]
 
         # No need for all the grid stuff perhaps something similar.
-        self.grid_length = 30
+        self.grid_length = 15
         self.num_squares = self.grid_length * self.grid_length
         self.grid_shape = (self.grid_length, self.grid_length)
 
-        self.shapes = [SHAPES.CIRCLE, SHAPES.DIAMOND, SHAPES.SPARKLE, SHAPES.SQUARE, SHAPES.STAR, SHAPES.TRIANGLE]
-        self.colors = [COLORS.BLUE, COLORS.CYAN, COLORS.GREEN, COLORS.MAGENTA, COLORS.RED, COLORS.YELLOW]
+        self.shapes = [ SHAPES.DIAMOND, SHAPES.SQUARE, SHAPES.TRIANGLE]
+        self.colors = [COLORS.GREEN, COLORS.RED, COLORS.YELLOW]
 
         # Initialize the board
         # 12 has been gotten rid of as, the only thing on the board would be an integer mapped from the tile to the class. 
@@ -184,26 +184,26 @@ class QwirkleEnv(gym.Env):
     def pick_tiles_player_specific(self, bag_of_tiles):
         rnd = Random()
         _tiles = []
-        while len(_tiles) < 6 and len(bag_of_tiles) > 0:
+        while len(_tiles) < 3 and len(bag_of_tiles) > 0:
             i = rnd.randint(0, len(bag_of_tiles) - 1)
 
             _tiles.append(bag_of_tiles.pop(i))    
         return _tiles    
             
-    def _hand_pick_specific_tiles(self, bag_of_tiles):
-        _tiles = [Piece(color=self.colors[0], shape=self.shapes[0]), Piece(color=self.colors[3], shape= self.shapes[0]), Piece(color=self.colors[4], shape= self.shapes[4]), Piece(color=self.colors[2], shape= self.shapes[4]), Piece(color=self.colors[3], shape= self.shapes[0]), Piece(color=self.colors[3], shape= self.shapes[2])]
-        for tile in _tiles:
-            for i, bag_tile in enumerate(bag_of_tiles):
-                if bag_tile.color == tile.color and bag_tile.shape == tile.shape:
-                    bag_of_tiles.pop(i)
-                    break
-        return _tiles
+    # def _hand_pick_specific_tiles(self, bag_of_tiles):
+    #     _tiles = [Piece(color=self.colors[0], shape=self.shapes[0]), Piece(color=self.colors[3], shape= self.shapes[0]), Piece(color=self.colors[4], shape= self.shapes[4]), Piece(color=self.colors[2], shape= self.shapes[4]), Piece(color=self.colors[3], shape= self.shapes[0]), Piece(color=self.colors[3], shape= self.shapes[2])]
+    #     for tile in _tiles:
+    #         for i, bag_tile in enumerate(bag_of_tiles):
+    #             if bag_tile.color == tile.color and bag_tile.shape == tile.shape:
+    #                 bag_of_tiles.pop(i)
+    #                 break
+    #     return _tiles
 
     def pick_tiles(self, bag_of_tiles):
         rnd = Random()
         # self._tiles = []
         # self._tiles = []
-        while len(self._tiles) < 6 and len(bag_of_tiles) > 0:
+        while len(self._tiles) < 3 and len(bag_of_tiles) > 0:
             i = rnd.randint(0, len(bag_of_tiles) - 1)
 
             self._tiles.append(bag_of_tiles.pop(i))    
@@ -215,7 +215,7 @@ class QwirkleEnv(gym.Env):
             # if not it creates the dictionary and does that. 
     def piece_to_float_converter(self, piece):
         piece = str(piece)
-        if len(self.look_up_dict) == 36:
+        if len(self.look_up_dict) == 9:
             piece_in_float = self.look_up_dict[piece]
             return piece_in_float
         else:
@@ -223,9 +223,9 @@ class QwirkleEnv(gym.Env):
             counter = 0
             for c in range(len(self.colors)):
                 for s in range(len(self.shapes)):
-                    zero_check = round(float_auxilary + (counter * 0.05), 2)
+                    zero_check = round(float_auxilary + (counter * 0.10), 2)
                     if zero_check == 0:
-                        zero_check = round(zero_check + 0.05, 2)
+                        zero_check = round(zero_check + 0.10, 2)
                         counter += 1
                     self.look_up_dict[str(Piece(color=self.colors[c], shape=self.shapes[s]))] = zero_check
                     counter += 1
@@ -240,7 +240,7 @@ class QwirkleEnv(gym.Env):
             return piece_in_float
 
     def float_to_piece_converter(self, _float):
-        if len(self.look_up_float_to_piece) == 36:
+        if len(self.look_up_float_to_piece) == 9:
             float_in_piece = self.look_up_float_to_piece[_float]
             # print(f"self.look_up_float_to_piece: {self.look_up_float_to_piece}")
             return float_in_piece
@@ -249,9 +249,9 @@ class QwirkleEnv(gym.Env):
             counter = 0
             for c in range(len(self.colors)):
                 for s in range(len(self.shapes)):
-                    zero_check = round(float_auxilary + (counter * 0.05), 2)
+                    zero_check = round(float_auxilary + (counter * 0.10), 2)
                     if zero_check == 0:
-                        zero_check = round(zero_check + 0.05, 2)
+                        zero_check = round(zero_check + 0.10, 2)
                         counter += 1
                     self.look_up_float_to_piece[zero_check] = Piece(color=self.colors[c], shape=self.shapes[s])
                     counter += 1
@@ -596,8 +596,8 @@ class QwirkleEnv(gym.Env):
                             scored_horizontally.append((x, y))
                     t_x += 1
 
-                if qwirkle_count == 6:
-                    score += 6
+                if qwirkle_count == 3:
+                    score += 3
 
             min_y = y
             while min_y - 1 >= 0 and self._board[min_y - 1][x] is not None:
@@ -621,8 +621,8 @@ class QwirkleEnv(gym.Env):
                             scored_vertically.append((x, y))
                     t_y += 1
 
-                if qwirkle_count == 6:
-                    score += 6
+                if qwirkle_count == 3:
+                    score += 3
         logger.debug(f"def score(), end. {score}")
         return score
 
@@ -842,7 +842,7 @@ class QwirkleEnv(gym.Env):
 
             # score, reward and done.
             score = self.score()
-            scalar = 175
+            scalar = 90
             norm_score = score / scalar
             self.reward[self.current_player_num] = norm_score            
             self.done = self.check_game_over()
@@ -884,7 +884,7 @@ class QwirkleEnv(gym.Env):
             
             # figuring out some sort of a scoring system. 
             score = self.score()
-            scalar = 175
+            scalar = 90
             norm_score = score / scalar
             self.reward[self.current_player_num] = norm_score
 
